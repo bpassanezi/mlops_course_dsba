@@ -20,4 +20,4 @@ print("Input : ", input_request, "Output: ", x.text)
 
 input_request = {'address': 10, 'surface': 100}
 x = requests.post(url, json = input_request)
-print(input_request, x.text)
+print("Input : ", input_request, "Output: ", x.text)

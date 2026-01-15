@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-
+from scoring import scoring_function
 
 app = FastAPI()
 
@@ -9,16 +9,6 @@ class ScoringRequest(BaseModel):
     address: str # required field
     surface: float  # required field
     num_rooms: float = None # optional field
-
-# Define very simple room for scoring
-def scoring_function(surface: float, num_rooms: float = 0) -> int:
-    current_value = 10
-    if surface > 50:
-        current_value += 100
-    if num_rooms >= 2:
-        current_value = current_value*2
-
-    return current_value
 
 @app.get("/")
 async def root():
