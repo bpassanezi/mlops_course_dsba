@@ -10,10 +10,6 @@ class ScoringRequest(BaseModel):
     surface: float  # required field
     num_rooms: float = None # optional field
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
 @app.post("/scoring/")
 async def get_scoring(request: ScoringRequest):
     surface = request.surface
