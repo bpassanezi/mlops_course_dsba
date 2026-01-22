@@ -18,4 +18,5 @@ async def root():
 async def get_scoring(request: ScoringRequest):
     surface = request.surface
     num_rooms = request.num_rooms if request.num_rooms is not None else 0
-    return scoring_function(surface, num_rooms)
+
+    return {"score": scoring_function(surface, num_rooms)}
