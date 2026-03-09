@@ -1,16 +1,18 @@
-FROM python:3.9
+FROM python:3.9-slim
 
+# Set working directory
+WORKDIR /app
 
-WORKDIR /code
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy source code ONLY
+COPY src/ ./src/
 
-COPY ./requirements.txt /code/requirements.txt
+# Set PYTHONPATH to include src
+ENV PYTHONPATH="/app/src"
 
-
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-
-
-COPY ./ /code/app
-
-
-CMD ["fastapi", "run", "app/app.py", "--port", "80"]
+# Run the API
+# FastAPI will automatically find the app in src/api/main.py
+CMD ["fastapi", "run", "src/api/main.py", "--port", "80"]

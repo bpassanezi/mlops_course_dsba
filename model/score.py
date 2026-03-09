@@ -1,4 +1,3 @@
-
 # Define very simple room for scoring
 def scoring_function(surface: float, num_rooms: float = 0) -> int:
     current_value = 10
