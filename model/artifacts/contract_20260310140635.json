@@ -1,0 +1,38 @@
+{
+  "version": "20260310140635",
+  "target": "valeur_fonciere",
+  "features": [
+    "surface_reelle_bati",
+    "nombre_pieces_principales",
+    "code_departement",
+    "type_local",
+    "surface_per_room",
+    "log_surface"
+  ],
+  "numeric_features": [
+    "surface_reelle_bati",
+    "nombre_pieces_principales"
+  ],
+  "engineered_features": [
+    "surface_per_room",
+    "log_surface"
+  ],
+  "categorical_features": [
+    "code_departement",
+    "type_local"
+  ],
+  "train_rows": 354204,
+  "test_rows": 88552,
+  "metrics": {
+    "train_mae": 89169.38,
+    "train_rmse": 127851.19,
+    "train_medae": 63098.95,
+    "train_mape_pct": 126.43,
+    "train_r2": 0.4962,
+    "test_mae": 90056.27,
+    "test_rmse": 129048.8,
+    "test_medae": 63904.73,
+    "test_mape_pct": 126.16,
+    "test_r2": 0.4787
+  }
+}
