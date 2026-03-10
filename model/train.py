@@ -11,7 +11,10 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
 
-from model.score import evaluate_model
+try:
+    from model.score import evaluate_model
+except ModuleNotFoundError:
+    from score import evaluate_model
 
 # ---------------------------------------------------------------------------
 # Paths
