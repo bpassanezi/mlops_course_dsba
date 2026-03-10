@@ -1,0 +1,899 @@
+﻿================================================================================
+  EDA ù Bouches Du Rhone
+================================================================================
+
+--- Basic Information ---
+  dataset: Bouches Du Rhone
+  rows: 469803
+  columns: 41
+  memory_usage_mb: 616.98
+  duplicated_rows: 200664
+
+--- Missing Values (columns with missing data) ---
+                              missing_count  missing_pct
+ancien_code_commune                  469794       100.00
+ancien_id_parcelle                   469794       100.00
+ancien_nom_commune                   469794       100.00
+lot5_surface_carrez                  469698        99.98
+lot4_surface_carrez                  469549        99.95
+lot5_numero                          468911        99.81
+lot3_surface_carrez                  468682        99.76
+numero_volume                        468367        99.69
+lot4_numero                          467773        99.57
+lot3_numero                          464114        98.79
+code_nature_culture_speciale         454021        96.64
+nature_culture_speciale              454021        96.64
+lot2_surface_carrez                  449241        95.62
+adresse_suffixe                      444411        94.60
+lot2_numero                          409450        87.15
+lot1_surface_carrez                  396831        84.47
+surface_reelle_bati                  279529        59.50
+surface_terrain                      247940        52.78
+code_nature_culture                  247912        52.77
+nature_culture                       247912        52.77
+lot1_numero                          224797        47.85
+nombre_pieces_principales            135719        28.89
+type_local                           135339        28.81
+code_type_local                      135348        28.81
+adresse_numero                       111755        23.79
+longitude                              8928         1.90
+latitude                               8928         1.90
+code_postal                            6414         1.37
+adresse_code_voie                      6330         1.35
+adresse_nom_voie                       6341         1.35
+valeur_fonciere                        1446         0.31
+
+--- Numeric Columns Summary ---
+                              count          mean           std           min            25%            50%            75%           max
+valeur_fonciere            468357.0  1.031188e+06  3.595640e+07      0.150000  155000.000000  275000.000000  525250.000000  1.415000e+10
+adresse_numero             358048.0  1.935120e+03  3.372166e+03      1.000000      13.000000      56.000000    1298.000000  9.999000e+03
+code_postal                463389.0  1.329861e+04  2.810864e+02  13001.000000   13090.000000   13200.000000   13510.000000  1.399000e+04
+numero_volume                1436.0  1.308476e+03  4.355755e+03      1.000000       2.000000       4.000000     103.000000  3.100000e+04
+lot1_surface_carrez         72972.0  6.429183e+01  1.016252e+02      0.290000      40.370000      60.020000      76.720000  9.042000e+03
+lot2_surface_carrez         20562.0  6.926961e+01  1.012681e+02      0.400000      54.220000      65.630000      77.570000  5.086000e+03
+lot3_surface_carrez          1121.0  7.563901e+01  5.911799e+01      1.100000      48.800000      65.000000      89.340000  6.475000e+02
+lot4_surface_carrez           254.0  9.293130e+01  1.600648e+02      8.000000      30.012500      63.450000     119.110000  1.716300e+03
+lot5_surface_carrez           105.0  7.463000e+01  4.996240e+01      8.000000      31.800000      63.500000     116.100000  2.912900e+02
+code_type_local            334455.0  2.334703e+00  8.704074e-01      1.000000       2.000000       2.000000       3.000000  4.000000e+00
+surface_reelle_bati        190274.0  1.085205e+02  6.398403e+02      1.000000      46.000000      69.000000      95.000000  8.868000e+04
+nombre_pieces_principales  334084.0  1.676429e+00  1.958257e+00      0.000000       0.000000       1.000000       3.000000  3.600000e+01
+surface_terrain            221863.0  2.536509e+03  1.801908e+04      1.000000     210.000000     585.000000    1430.000000  2.175303e+06
+longitude                  460875.0  5.222609e+00  2.731801e-01      4.350366       5.022834       5.339200       5.421705  5.756004e+00
+latitude                   460875.0  4.349059e+01  1.757543e-01     43.164547      43.331855      43.468554      43.631828  4.391994e+01
+
+--- Categorical Columns Summary ---
+                      column  unique_values       most_frequent  most_frequent_count  most_frequent_pct
+                 id_mutation         121958         2022-174983                 1218               0.26
+               date_mutation           1291          2024-07-26                 2310               0.49
+          numero_disposition             38                   1               449546              95.69
+             nature_mutation              6               Vente               410090              87.29
+             adresse_suffixe             33                   B                 9645              37.98
+            adresse_nom_voie          19225          LE VILLAGE                 1379               0.30
+           adresse_code_voie           6879                B007                 1563               0.34
+                code_commune            135               13001                51534              10.97
+                 nom_commune            135     Aix-en-Provence                51534              10.97
+            code_departement              2                  13               469794             100.00
+         ancien_code_commune              1 ancien_code_commune                    9             100.00
+          ancien_nom_commune              1  ancien_nom_commune                    9             100.00
+                 id_parcelle          92774      132148940A0167                 1357               0.29
+          ancien_id_parcelle              1  ancien_id_parcelle                    9             100.00
+                 lot1_numero           3243                   1                 9885               4.03
+                 lot2_numero           1950                   4                 1846               3.06
+                 lot3_numero            313                   8                  391               6.87
+                 lot4_numero            181                   9                  193               9.51
+                 lot5_numero            126                   9                   87               9.75
+                 nombre_lots             34                   0               224797              47.85
+                  type_local              5          DÚpendance               143249              42.83
+         code_nature_culture             20                   S               143312              64.59
+              nature_culture             20                sols               143312              64.59
+code_nature_culture_speciale             36               VAGUE                 2916              18.48
+     nature_culture_speciale             36       Terrain vague                 2916              18.48
+             section_prefixe           1237               000AB                10469               2.23
+
+--- Target Variable: valeur_fonciere (Property Value) ---
+  count: 468357
+  mean: 1031187.59
+  median: 275000.0
+  std: 35956400.34
+  min: 0.15
+  max: 14149999600.0
+  skewness: 390.31
+  kurtosis: 153580.69
+  q1: 155000.0
+  q3: 525250.0
+  iqr: 370250.0
+
+--- Transaction Type Distribution ---
+                                     count    pct
+nature_mutation                                  
+Vente                               410090  87.29
+Vente en l'Útat futur d'achÞvement   54372  11.57
+Echange                               2168   0.46
+Adjudication                          1790   0.38
+Vente terrain Ó bÔtir                 1374   0.29
+nature_mutation                          9   0.00
+
+--- Property Type Distribution ---
+                                           count    pct
+type_local                                             
+DÚpendance                                143249  42.83
+Appartement                               101751  30.42
+Maison                                     70072  20.95
+Local industriel. commercial ou assimilÚ   19383   5.80
+type_local                                     9   0.00
+
+--- Top 10 Communes by Transactions ---
+                              transactions
+nom_commune                               
+Aix-en-Provence                      51534
+Arles                                21499
+Istres                               14359
+Martigues                            13883
+Marseille 8e Arrondissement          12633
+Salon-de-Provence                    12066
+Marignane                            10859
+Marseille 13e Arrondissement         10257
+Marseille 9e Arrondissement           9678
+Vitrolles                             9594
+
+--- Mean/Median Price by Property Type ---
+                                                mean    median   count           std
+type_local                                                                          
+Appartement                                591854.69  198800.0  101640  1.808645e+06
+DÚpendance                                 590746.68  253800.0  143177  1.725835e+06
+Local industriel. commercial ou assimilÚ  3653636.92  362500.0   19267  1.766118e+08
+Maison                                     605611.03  389000.0   70020  1.028618e+06
+type_local                                       NaN       NaN       0           NaN
+
+--- Surface Reelle Bati (Built Area) Analysis ---
+  count: 190274
+  mean: 108.52
+  median: 69.0
+  std: 639.84
+  min: 1.0
+  max: 88680.0
+
+--- Correlation Matrix (Key Features) ---
+                           valeur_fonciere  surface_reelle_bati  nombre_pieces_principales  surface_terrain  longitude  latitude
+valeur_fonciere                      1.000                0.015                     -0.002            0.005      0.005    -0.008
+surface_reelle_bati                  0.015                1.000                     -0.036            0.081     -0.018     0.024
+nombre_pieces_principales           -0.002               -0.036                      1.000            0.003     -0.080     0.114
+surface_terrain                      0.005                0.081                      0.003            1.000     -0.039     0.012
+longitude                            0.005               -0.018                     -0.080           -0.039      1.000    -0.646
+latitude                            -0.008                0.024                      0.114            0.012     -0.646     1.000
+
+--- Outlier Detection: valeur_fonciere (IQR method) ---
+  total_values: 468357
+  outliers_count: 56204
+  outliers_pct: 12.0
+  lower_bound: -400375.0
+  upper_bound: 1080625.0
+
+--- Outlier Detection: surface_reelle_bati (IQR method) ---
+  total_values: 190274
+  outliers_count: 11813
+  outliers_pct: 6.21
+  lower_bound: -27.5
+  upper_bound: 168.5
+
+
+================================================================================
+  EDA ù Haute Garonne
+================================================================================
+
+--- Basic Information ---
+  dataset: Haute Garonne
+  rows: 405993
+  columns: 41
+  memory_usage_mb: 530.34
+  duplicated_rows: 168898
+
+--- Missing Values (columns with missing data) ---
+                              missing_count  missing_pct
+ancien_code_commune                  405985       100.00
+ancien_id_parcelle                   405985       100.00
+ancien_nom_commune                   405985       100.00
+lot5_surface_carrez                  405956        99.99
+lot4_surface_carrez                  405645        99.91
+lot5_numero                          405511        99.88
+numero_volume                        404563        99.65
+lot3_surface_carrez                  404080        99.53
+lot4_numero                          404023        99.51
+lot2_surface_carrez                  396857        97.75
+lot3_numero                          395681        97.46
+code_nature_culture_speciale         387689        95.49
+nature_culture_speciale              387689        95.49
+adresse_suffixe                      380544        93.73
+lot1_surface_carrez                  367194        90.44
+lot2_numero                          365598        90.05
+surface_reelle_bati                  273220        67.30
+lot1_numero                          230776        56.84
+surface_terrain                      178242        43.90
+nature_culture                       178228        43.90
+code_nature_culture                  178228        43.90
+nombre_pieces_principales            164172        40.44
+type_local                           164005        40.40
+code_type_local                      164013        40.40
+adresse_numero                       118035        29.07
+longitude                             10108         2.49
+latitude                              10108         2.49
+code_postal                            3439         0.85
+adresse_code_voie                      3211         0.79
+adresse_nom_voie                       3213         0.79
+valeur_fonciere                        1732         0.43
+
+--- Numeric Columns Summary ---
+                              count           mean           std           min            25%            50%            75%           max
+valeur_fonciere            404261.0  581432.299209  2.140386e+06      0.150000  106000.000000  195900.000000  312550.000000  1.001000e+08
+adresse_numero             287958.0     297.051980  1.288430e+03      1.000000       7.000000      20.000000      58.000000  9.999000e+03
+code_postal                402554.0   31390.650049  2.230388e+02  31000.000000   31200.000000   31380.000000   31540.000000  3.188000e+04
+numero_volume                1430.0       9.459441  4.247411e+01      1.000000       1.000000       2.000000       4.000000  6.000000e+02
+lot1_surface_carrez         38799.0      59.035131  5.000929e+01      1.000000      40.395000      56.520000      69.400000  4.349000e+03
+lot2_surface_carrez          9136.0      60.210813  2.580008e+01      2.760000      43.740000      59.200000      71.830000  5.798000e+02
+lot3_surface_carrez          1913.0      61.381093  2.272873e+01     12.400000      45.710000      60.710000      66.320000  2.796200e+02
+lot4_surface_carrez           348.0      70.721954  3.062501e+01      1.200000      53.140000      66.220000      83.520000  1.874500e+02
+lot5_surface_carrez            37.0     163.437838  2.059101e+02     17.770000      59.640000     108.400000     209.600000  1.052060e+03
+code_type_local            241980.0       2.288726  8.905113e-01      1.000000       2.000000       2.000000       3.000000  4.000000e+00
+surface_reelle_bati        132773.0     110.619478  5.249946e+02      1.000000      50.000000      75.000000     106.000000  4.437500e+04
+nombre_pieces_principales  241821.0       1.739241  2.018353e+00      0.000000       0.000000       1.000000       3.000000  2.500000e+01
+surface_terrain            227751.0    2294.775338  7.853799e+03      1.000000     255.000000     678.000000    1600.000000  8.339420e+05
+longitude                  395885.0       1.309990  2.633354e-01      0.446685       1.243947       1.394154       1.457362  2.038088e+00
+latitude                   395885.0      43.490786  2.114119e-01     42.734898      43.404933      43.567279      43.618048  4.390567e+01
+
+--- Categorical Columns Summary ---
+                      column  unique_values       most_frequent  most_frequent_count  most_frequent_pct
+                 id_mutation          96550         2024-352334                  545               0.13
+               date_mutation           1415          2024-12-30                 3863               0.95
+          numero_disposition             23                   1               387431              95.43
+             nature_mutation              7               Vente               350230              86.27
+             adresse_suffixe             28                   B                15338              60.27
+            adresse_nom_voie          20889          LE VILLAGE                 4341               1.08
+           adresse_code_voie           3953                B019                 2545               0.63
+                code_commune            582               31555               117817              29.02
+                 nom_commune            582            Toulouse               117817              29.02
+            code_departement              2                  31               405985             100.00
+         ancien_code_commune              1 ancien_code_commune                    8             100.00
+          ancien_nom_commune              1  ancien_nom_commune                    8             100.00
+                 id_parcelle         108539      31555837AR0201                  656               0.16
+          ancien_id_parcelle              1  ancien_id_parcelle                    8             100.00
+                 lot1_numero           3087                   1                 3891               2.22
+                 lot2_numero           1392                   8                  946               2.34
+                 lot3_numero            494                   8                  282               2.73
+                 lot4_numero            201                   9                   85               4.31
+                 lot5_numero            123                   5                   24               4.98
+                 nombre_lots             39                   0               230776              56.84
+                  type_local              5          DÚpendance               108664              44.90
+         code_nature_culture             20                   S               114477              50.26
+              nature_culture             20                sols               114477              50.26
+code_nature_culture_speciale             28                PARC                11247              61.45
+     nature_culture_speciale             28                Parc                11247              61.45
+             section_prefixe            616               0000A                34813               8.57
+
+--- Target Variable: valeur_fonciere (Property Value) ---
+  count: 404261
+  mean: 581432.3
+  median: 195900.0
+  std: 2140385.66
+  min: 0.15
+  max: 100100000.0
+  skewness: 14.83
+  kurtosis: 488.27
+  q1: 106000.0
+  q3: 312550.0
+  iqr: 206550.0
+
+--- Transaction Type Distribution ---
+                                     count    pct
+nature_mutation                                  
+Vente                               350230  86.27
+Vente en l'Útat futur d'achÞvement   50239  12.37
+Echange                               3047   0.75
+Adjudication                          1192   0.29
+Vente terrain Ó bÔtir                 1133   0.28
+Expropriation                          144   0.04
+nature_mutation                          8   0.00
+
+--- Property Type Distribution ---
+                                           count    pct
+type_local                                             
+DÚpendance                                108664  44.90
+Appartement                                62217  25.71
+Maison                                     60332  24.93
+Local industriel. commercial ou assimilÚ   10767   4.45
+type_local                                     8   0.00
+
+--- Top 10 Communes by Transactions ---
+                    transactions
+nom_commune                     
+Toulouse                  117817
+Muret                       9618
+Colomiers                   6888
+Blagnac                     6815
+Tournefeuille               4863
+Castanet-Tolosan            4074
+Saint-Gaudens               3996
+BagnÞres-de-Luchon          3695
+Auterive                    3668
+Cugnaux                     3661
+
+--- Mean/Median Price by Property Type ---
+                                                mean    median   count         std
+type_local                                                                        
+Appartement                                767286.73  159750.0   62143  2627581.04
+DÚpendance                                 489763.45  189000.0  108575  1723055.12
+Local industriel. commercial ou assimilÚ  1062154.87  282000.0   10654  3998347.62
+Maison                                     358537.61  265000.0   60273   955267.31
+type_local                                       NaN       NaN       0         NaN
+
+--- Surface Reelle Bati (Built Area) Analysis ---
+  count: 132773
+  mean: 110.62
+  median: 75.0
+  std: 524.99
+  min: 1.0
+  max: 44375.0
+
+--- Correlation Matrix (Key Features) ---
+                           valeur_fonciere  surface_reelle_bati  nombre_pieces_principales  surface_terrain  longitude  latitude
+valeur_fonciere                      1.000                0.140                     -0.030            0.042      0.082     0.101
+surface_reelle_bati                  0.140                1.000                     -0.039            0.101     -0.013    -0.016
+nombre_pieces_principales           -0.030               -0.039                      1.000           -0.053     -0.053    -0.075
+surface_terrain                      0.042                0.101                     -0.053            1.000     -0.018    -0.027
+longitude                            0.082               -0.013                     -0.053           -0.018      1.000     0.754
+latitude                             0.101               -0.016                     -0.075           -0.027      0.754     1.000
+
+--- Outlier Detection: valeur_fonciere (IQR method) ---
+  total_values: 404261
+  outliers_count: 39017
+  outliers_pct: 9.65
+  lower_bound: -203825.0
+  upper_bound: 622375.0
+
+--- Outlier Detection: surface_reelle_bati (IQR method) ---
+  total_values: 132773
+  outliers_count: 6144
+  outliers_pct: 4.63
+  lower_bound: -34.0
+  upper_bound: 190.0
+
+
+================================================================================
+  EDA ù Nord
+================================================================================
+
+--- Basic Information ---
+  dataset: Nord
+  rows: 540456
+  columns: 41
+  memory_usage_mb: 708.88
+  duplicated_rows: 213230
+
+--- Missing Values (columns with missing data) ---
+                              missing_count  missing_pct
+ancien_code_commune                  540446       100.00
+ancien_id_parcelle                   540446       100.00
+ancien_nom_commune                   540446       100.00
+lot5_surface_carrez                  540440       100.00
+lot4_surface_carrez                  540307        99.97
+lot5_numero                          539959        99.91
+lot3_surface_carrez                  539832        99.88
+lot4_numero                          539237        99.77
+numero_volume                        537780        99.50
+lot3_numero                          536662        99.30
+lot2_surface_carrez                  535029        99.00
+lot1_surface_carrez                  514820        95.26
+lot2_numero                          514640        95.22
+code_nature_culture_speciale         512309        94.79
+nature_culture_speciale              512309        94.79
+adresse_suffixe                      508186        94.03
+lot1_numero                          419624        77.64
+surface_reelle_bati                  302050        55.89
+nombre_pieces_principales            166949        30.89
+type_local                           166273        30.77
+code_type_local                      166283        30.77
+adresse_numero                       145948        27.00
+code_nature_culture                  125200        23.17
+nature_culture                       125200        23.17
+surface_terrain                      125219        23.17
+longitude                             11789         2.18
+latitude                              11789         2.18
+valeur_fonciere                        4719         0.87
+code_postal                            4320         0.80
+adresse_code_voie                      4178         0.77
+adresse_nom_voie                       4182         0.77
+
+--- Numeric Columns Summary ---
+                              count          mean           std           min           25%            50%            75%           max
+valeur_fonciere            535737.0  5.449115e+06  3.055612e+07      0.150000  90000.000000  163500.000000  280000.000000  1.980070e+08
+adresse_numero             394508.0  4.053059e+02  1.586681e+03      1.000000     12.000000      35.000000     102.000000  9.999000e+03
+code_postal                536136.0  5.936441e+04  2.462800e+02  59000.000000  59169.000000   59280.000000   59540.000000  5.999000e+04
+numero_volume                2676.0  5.597571e+01  8.022172e+02      1.000000      2.000000       2.000000       6.250000  2.100000e+04
+lot1_surface_carrez         25636.0  6.558206e+01  8.017782e+01      1.000000     40.380000      56.630000      76.385000  3.971000e+03
+lot2_surface_carrez          5427.0  6.739544e+01  4.001352e+01      2.680000     44.850000      64.020000      82.900000  1.183000e+03
+lot3_surface_carrez           624.0  7.931234e+01  5.290656e+01      6.000000     52.110000      67.475000      97.660000  6.807000e+02
+lot4_surface_carrez           149.0  9.408852e+01  7.799511e+01      6.000000     37.570000      80.000000     129.470000  6.413100e+02
+lot5_surface_carrez            16.0  1.804025e+02  1.357045e+02      6.000000     42.495000     148.570000     291.012500  3.776900e+02
+code_type_local            374173.0  2.109439e+00  9.956068e-01      1.000000      1.000000       2.000000       3.000000  4.000000e+00
+surface_reelle_bati        238406.0  1.284942e+02  7.855243e+02      1.000000     55.000000      80.000000     106.000000  7.414800e+04
+nombre_pieces_principales  373507.0  2.154891e+00  2.226849e+00      0.000000      0.000000       2.000000       4.000000  5.700000e+01
+surface_terrain            415237.0  1.501419e+03  5.724954e+03      1.000000    132.000000     329.000000     776.000000  4.450420e+05
+longitude                  528667.0  3.195207e+00  4.147112e-01      2.098414      3.044111       3.159039       3.462853  4.223977e+00
+latitude                   528667.0  5.051111e+01  2.538308e-01     49.972312     50.316675      50.550817      50.680038  5.108645e+01
+
+--- Categorical Columns Summary ---
+                      column  unique_values       most_frequent  most_frequent_count  most_frequent_pct
+                 id_mutation         148989         2021-983501                13017               2.41
+               date_mutation           1535          2021-12-21                16307               3.02
+          numero_disposition             51                   1               510482              94.45
+             nature_mutation              7               Vente               488700              90.42
+             adresse_suffixe             37                   B                19307              59.83
+            adresse_nom_voie          23038          LE VILLAGE                 7917               1.48
+           adresse_code_voie           4064                0020                 6862               1.28
+                code_commune            649               59350                43060               7.97
+                 nom_commune            649               Lille                43060               7.97
+            code_departement              2                  59               540446             100.00
+         ancien_code_commune              1 ancien_code_commune                   10             100.00
+          ancien_nom_commune              1  ancien_nom_commune                   10             100.00
+                 id_parcelle         190078      596060000V0068                  987               0.18
+          ancien_id_parcelle              1  ancien_id_parcelle                   10             100.00
+                 lot1_numero           2230                   1                 4109               3.40
+                 lot2_numero           1012                   5                 1009               3.91
+                 lot3_numero            289                   9                  228               6.01
+                 lot4_numero            175                   4                   98               8.04
+                 lot5_numero            109                   5                   54              10.87
+                 nombre_lots             38                   0               419624              77.64
+                  type_local              5              Maison               142519              38.09
+         code_nature_culture             20                   S               300401              72.34
+              nature_culture             20                sols               300401              72.34
+code_nature_culture_speciale             29               PATUR                15477              54.99
+     nature_culture_speciale             29      PÔture plantÚe                15477              54.99
+             section_prefixe            453               0000A                68452              12.67
+
+--- Target Variable: valeur_fonciere (Property Value) ---
+  count: 535737
+  mean: 5449115.03
+  median: 163500.0
+  std: 30556123.01
+  min: 0.15
+  max: 198007024.0
+  skewness: 6.09
+  kurtosis: 35.34
+  q1: 90000.0
+  q3: 280000.0
+  iqr: 190000.0
+
+--- Transaction Type Distribution ---
+                                     count    pct
+nature_mutation                                  
+Vente                               488700  90.42
+Vente en l'Útat futur d'achÞvement   30345   5.61
+Echange                              17864   3.31
+Vente terrain Ó bÔtir                 1800   0.33
+Adjudication                          1428   0.26
+Expropriation                          309   0.06
+nature_mutation                         10   0.00
+
+--- Property Type Distribution ---
+                                           count    pct
+type_local                                             
+Maison                                    142519  38.09
+DÚpendance                                134082  35.83
+Appartement                                72879  19.48
+Local industriel. commercial ou assimilÚ   24693   6.60
+type_local                                    10   0.00
+
+--- Top 10 Communes by Transactions ---
+                   transactions
+nom_commune                    
+Lille                     43060
+Dunkerque                 18984
+Valenciennes              17537
+Tourcoing                 16064
+Roubaix                   14788
+Villeneuve-d'Ascq         10412
+Cambrai                    9450
+Douai                      8987
+Marcq-en-Bar£ul            8430
+Maubeuge                   7042
+
+--- Mean/Median Price by Property Type ---
+                                                 mean    median   count          std
+type_local                                                                          
+Appartement                               14932979.18  186500.0   72481  51316891.82
+DÚpendance                                 9684443.58  162367.0  133718  41791648.84
+Local industriel. commercial ou assimilÚ   2126006.21  252860.0   24439  10485557.89
+Maison                                     1510103.79  167000.0  142126  15409899.85
+type_local                                        NaN       NaN       0          NaN
+
+--- Surface Reelle Bati (Built Area) Analysis ---
+  count: 238406
+  mean: 128.49
+  median: 80.0
+  std: 785.52
+  min: 1.0
+  max: 74148.0
+
+--- Correlation Matrix (Key Features) ---
+                           valeur_fonciere  surface_reelle_bati  nombre_pieces_principales  surface_terrain  longitude  latitude
+valeur_fonciere                      1.000               -0.003                     -0.066            0.051     -0.038     0.084
+surface_reelle_bati                 -0.003                1.000                     -0.065            0.253      0.004    -0.007
+nombre_pieces_principales           -0.066               -0.065                      1.000           -0.052      0.031    -0.054
+surface_terrain                      0.051                0.253                     -0.052            1.000      0.007    -0.038
+longitude                           -0.038                0.004                      0.031            0.007      1.000    -0.820
+latitude                             0.084               -0.007                     -0.054           -0.038     -0.820     1.000
+
+--- Outlier Detection: valeur_fonciere (IQR method) ---
+  total_values: 535737
+  outliers_count: 61525
+  outliers_pct: 11.48
+  lower_bound: -195000.0
+  upper_bound: 565000.0
+
+--- Outlier Detection: surface_reelle_bati (IQR method) ---
+  total_values: 238406
+  outliers_count: 13605
+  outliers_pct: 5.71
+  lower_bound: -21.5
+  upper_bound: 182.5
+
+
+================================================================================
+  EDA ù Paris
+================================================================================
+
+--- Basic Information ---
+  dataset: Paris
+  rows: 395612
+  columns: 41
+  memory_usage_mb: 523.43
+  duplicated_rows: 133625
+
+--- Missing Values (columns with missing data) ---
+                              missing_count  missing_pct
+ancien_code_commune                  395605       100.00
+ancien_id_parcelle                   395605       100.00
+ancien_nom_commune                   395605       100.00
+code_nature_culture_speciale         395311        99.92
+nature_culture_speciale              395311        99.92
+lot5_surface_carrez                  395196        99.89
+lot4_surface_carrez                  394571        99.74
+numero_volume                        393934        99.58
+lot5_numero                          391432        98.94
+lot3_surface_carrez                  391192        98.88
+lot4_numero                          385642        97.48
+adresse_suffixe                      378367        95.64
+lot3_numero                          368593        93.17
+surface_terrain                      360029        91.01
+nature_culture                       359694        90.92
+code_nature_culture                  359694        90.92
+lot2_surface_carrez                  349928        88.45
+lot1_surface_carrez                  242436        61.28
+lot2_numero                          228963        57.88
+surface_reelle_bati                  185954        47.00
+lot1_numero                           37609         9.51
+valeur_fonciere                        5885         1.49
+nombre_pieces_principales              4552         1.15
+type_local                             4481         1.13
+code_type_local                        4488         1.13
+adresse_numero                         1479         0.37
+code_postal                            1417         0.36
+adresse_code_voie                      1406         0.36
+adresse_nom_voie                       1406         0.36
+longitude                               604         0.15
+latitude                                604         0.15
+
+--- Numeric Columns Summary ---
+                              count          mean           std           min            25%            50%           75%           max
+valeur_fonciere            389727.0  3.409524e+06  1.748924e+07      0.150000  257000.000000  500000.000000  1.069200e+06  1.003401e+09
+adresse_numero             394133.0  5.194943e+01  1.617576e+02      1.000000      11.000000      28.000000  6.800000e+01  9.999000e+03
+code_postal                394195.0  7.501303e+04  4.414345e+00  75001.000000   75011.000000   75014.000000  7.501600e+04  7.502000e+04
+numero_volume                1678.0  1.147803e+04  8.798201e+04      1.000000       5.250000      27.000000  1.144750e+03  1.000085e+06
+lot1_surface_carrez        153176.0  9.457641e+01  5.212212e+02      0.200000      26.420000      43.110000  7.071000e+01  9.532000e+03
+lot2_surface_carrez         45684.0  6.428266e+01  6.872018e+01      0.100000      35.037500      53.175000  7.904000e+01  7.392000e+03
+lot3_surface_carrez          4420.0  9.561780e+01  8.684534e+01      0.100000      43.447500      77.380000  1.230700e+02  1.737000e+03
+lot4_surface_carrez          1041.0  1.055964e+02  9.936506e+01      1.000000      47.200000      70.370000  1.338200e+02  8.946400e+02
+lot5_surface_carrez           416.0  1.297277e+02  1.607570e+02      0.400000      50.170000      85.790000  1.577100e+02  1.680000e+03
+code_type_local            391124.0  2.587282e+00  6.108220e-01      1.000000       2.000000       3.000000  3.000000e+00  4.000000e+00
+surface_reelle_bati        209658.0  6.674951e+01  2.478361e+02      1.000000      27.000000      44.000000  7.000000e+01  4.863000e+04
+nombre_pieces_principales  391060.0  1.144650e+00  1.516134e+00      0.000000       0.000000       0.000000  2.000000e+00  3.200000e+01
+surface_terrain             35583.0  1.066520e+03  1.495254e+03      1.000000     260.000000     516.000000  1.151000e+03  3.547600e+04
+longitude                  395008.0  2.336050e+00  3.968504e-02      2.255896       2.302892       2.335872  2.370769e+00  2.414997e+00
+latitude                   395008.0  4.885663e+01  1.921771e-02     48.816561      48.841522      48.854388  4.887110e+01  4.890093e+01
+
+--- Categorical Columns Summary ---
+                      column  unique_values                     most_frequent  most_frequent_count  most_frequent_pct
+                 id_mutation         148750                      2023-1360193                 1020               0.26
+               date_mutation           1428                        2025-03-31                 2870               0.73
+          numero_disposition             10                                 1               392210              99.14
+             nature_mutation              7                             Vente               388553              98.22
+             adresse_suffixe             14                                 B                13478              78.16
+            adresse_nom_voie           3918                      RUE LECOURBE                 3123               0.79
+           adresse_code_voie           3843                              5456                 3123               0.79
+                code_commune             21                             75115                52832              13.35
+                 nom_commune             21          Paris 15e Arrondissement                52832              13.35
+            code_departement              2                                75               395605             100.00
+         ancien_code_commune              1               ancien_code_commune                    7             100.00
+          ancien_nom_commune              1                ancien_nom_commune                    7             100.00
+                 id_parcelle          38139                    75113000DK0006                 1020               0.26
+          ancien_id_parcelle              1                ancien_id_parcelle                    7             100.00
+                 lot1_numero           4615                                10                 8679               2.42
+                 lot2_numero           2778                                 8                 4243               2.55
+                 lot3_numero            782                                 9                  759               2.81
+                 lot4_numero            482                                 9                  283               2.84
+                 lot5_numero            342                                 9                  125               2.99
+                 nombre_lots             47                                 1               191354              48.37
+                  type_local              5                       Appartement               184231              47.10
+         code_nature_culture              5                                 S                35464              98.74
+              nature_culture              5                              sols                35464              98.74
+code_nature_culture_speciale              4                               IMM                  241              80.07
+     nature_culture_speciale              4 DÚpendances d'ensemble immobilier                  241              80.07
+             section_prefixe            160                             000AR                 7756               1.96
+
+--- Target Variable: valeur_fonciere (Property Value) ---
+  count: 389727
+  mean: 3409523.92
+  median: 500000.0
+  std: 17489243.69
+  min: 0.15
+  max: 1003401470.0
+  skewness: 21.35
+  kurtosis: 824.73
+  q1: 257000.0
+  q3: 1069200.0
+  iqr: 812200.0
+
+--- Transaction Type Distribution ---
+                                     count    pct
+nature_mutation                                  
+Vente                               388553  98.22
+Vente en l'Útat futur d'achÞvement    3084   0.78
+Echange                               3072   0.78
+Adjudication                           839   0.21
+Vente terrain Ó bÔtir                   54   0.01
+nature_mutation                          7   0.00
+Expropriation                            3   0.00
+
+--- Property Type Distribution ---
+                                           count    pct
+type_local                                             
+Appartement                               184231  47.10
+DÚpendance                                181329  46.36
+Local industriel. commercial ou assimilÚ   24645   6.30
+Maison                                       919   0.23
+type_local                                     7   0.00
+
+--- Top 10 Communes by Transactions ---
+                          transactions
+nom_commune                           
+Paris 15e Arrondissement         52832
+Paris 16e Arrondissement         48756
+Paris 11e Arrondissement         36668
+Paris 12e Arrondissement         29413
+Paris 14e Arrondissement         28909
+Paris 13e Arrondissement         26031
+Paris 18e Arrondissement         25012
+Paris 17e Arrondissement         22040
+Paris 7e Arrondissement          17678
+Paris 20e Arrondissement         17423
+
+--- Mean/Median Price by Property Type ---
+                                                 mean     median   count          std
+type_local                                                                           
+Appartement                                2339921.54   469000.0  181480  11627554.03
+DÚpendance                                 3215377.40   508700.0  178672  13735709.08
+Local industriel. commercial ou assimilÚ  10113935.61   930000.0   24429  37233153.20
+Maison                                     3277104.23  1700000.0     919   6292070.21
+type_local                                        NaN        NaN       0          NaN
+
+--- Surface Reelle Bati (Built Area) Analysis ---
+  count: 209658
+  mean: 66.75
+  median: 44.0
+  std: 247.84
+  min: 1.0
+  max: 48630.0
+
+--- Correlation Matrix (Key Features) ---
+                           valeur_fonciere  surface_reelle_bati  nombre_pieces_principales  surface_terrain  longitude  latitude
+valeur_fonciere                      1.000                0.165                     -0.014            0.446     -0.007     0.001
+surface_reelle_bati                  0.165                1.000                      0.044            0.141     -0.035     0.011
+nombre_pieces_principales           -0.014                0.044                      1.000           -0.087     -0.013     0.027
+surface_terrain                      0.446                0.141                     -0.087            1.000      0.172    -0.315
+longitude                           -0.007               -0.035                     -0.013            0.172      1.000     0.075
+latitude                             0.001                0.011                      0.027           -0.315      0.075     1.000
+
+--- Outlier Detection: valeur_fonciere (IQR method) ---
+  total_values: 389727
+  outliers_count: 52380
+  outliers_pct: 13.44
+  lower_bound: -961300.0
+  upper_bound: 2287500.0
+
+--- Outlier Detection: surface_reelle_bati (IQR method) ---
+  total_values: 209658
+  outliers_count: 14146
+  outliers_pct: 6.75
+  lower_bound: -37.5
+  upper_bound: 134.5
+
+
+================================================================================
+  EDA ù Rhone
+================================================================================
+
+--- Basic Information ---
+  dataset: Rhone
+  rows: 457421
+  columns: 41
+  memory_usage_mb: 602.67
+  duplicated_rows: 217545
+
+--- Missing Values (columns with missing data) ---
+                              missing_count  missing_pct
+ancien_code_commune                  457412       100.00
+ancien_id_parcelle                   457412       100.00
+ancien_nom_commune                   457412       100.00
+lot5_surface_carrez                  457194        99.95
+lot4_surface_carrez                  456864        99.88
+numero_volume                        456150        99.72
+lot5_numero                          455988        99.69
+lot3_surface_carrez                  455544        99.59
+lot4_numero                          454314        99.32
+lot3_numero                          447695        97.87
+code_nature_culture_speciale         437368        95.62
+nature_culture_speciale              437368        95.62
+adresse_suffixe                      434435        94.97
+lot2_surface_carrez                  427397        93.44
+lot1_surface_carrez                  381944        83.50
+lot2_numero                          381038        83.30
+surface_reelle_bati                  270357        59.10
+surface_terrain                      265841        58.12
+code_nature_culture                  265832        58.12
+nature_culture                       265832        58.12
+lot1_numero                          196723        43.01
+nombre_pieces_principales            109615        23.96
+type_local                           109277        23.89
+code_type_local                      109286        23.89
+adresse_numero                       106932        23.38
+longitude                             19344         4.23
+latitude                              19344         4.23
+code_postal                            6893         1.51
+adresse_nom_voie                       6885         1.51
+adresse_code_voie                      6884         1.50
+valeur_fonciere                        1868         0.41
+
+--- Numeric Columns Summary ---
+                              count           mean           std           min            25%            50%            75%           max
+valeur_fonciere            455553.0  666168.531756  2.416661e+06      0.500000  150000.000000  265000.000000  455300.000000  2.361600e+08
+adresse_numero             350489.0     422.770478  1.453776e+03      1.000000      11.000000      35.000000     113.000000  9.999000e+03
+code_postal                450528.0   69327.706844  2.597291e+02  69001.000000   69100.000000   69300.000000   69500.000000  6.997000e+04
+numero_volume                1271.0      14.864673  7.661407e+01      1.000000       1.000000       2.000000       8.000000  1.300000e+03
+lot1_surface_carrez         75477.0      74.591273  1.259535e+02      1.000000      43.430000      63.840000      81.490000  5.102400e+03
+lot2_surface_carrez         30024.0      71.596221  3.111313e+01      0.340000      55.490000      68.910000      83.622500  1.932000e+03
+lot3_surface_carrez          1877.0      83.058114  4.952533e+01      0.340000      52.540000      74.070000     106.940000  5.577100e+02
+lot4_surface_carrez           557.0     114.263070  2.069620e+02      5.100000      63.700000      90.190000     118.200000  2.455000e+03
+lot5_surface_carrez           227.0     100.096388  6.684883e+01      2.170000      40.920000      99.860000     150.685000  4.091100e+02
+code_type_local            348135.0       2.494320  8.486094e-01      1.000000       2.000000       3.000000       3.000000  4.000000e+00
+surface_reelle_bati        187064.0     110.555425  5.242550e+02      1.000000      46.000000      70.000000      99.000000  6.164000e+04
+nombre_pieces_principales  347806.0       1.518781  1.960388e+00      0.000000       0.000000       0.000000       3.000000  3.200000e+01
+surface_terrain            191580.0    1746.316463  4.766283e+03      1.000000     222.000000     550.000000    1255.000000  2.963510e+05
+longitude                  438077.0       4.766557  1.457998e-01      4.249090       4.706412       4.796898       4.866261  5.134255e+00
+latitude                   438077.0      45.809029  1.403833e-01     45.457109      45.735997      45.766406      45.857028  4.630358e+01
+
+--- Categorical Columns Summary ---
+                      column  unique_values       most_frequent  most_frequent_count  most_frequent_pct
+                 id_mutation         101450        2022-1125965                 1573               0.34
+               date_mutation           1146          2022-04-12                 2776               0.61
+          numero_disposition             36                   1               431237              94.28
+             nature_mutation              7               Vente               405821              88.72
+             adresse_suffixe             28                   B                14799              64.38
+            adresse_nom_voie          15597            LE BOURG                 7297               1.62
+           adresse_code_voie           2814                0140                 4107               0.91
+                code_commune            277               69266                32901               7.19
+                 nom_commune            277        Villeurbanne                32901               7.19
+            code_departement              2                  69               457412             100.00
+         ancien_code_commune              1 ancien_code_commune                    9             100.00
+          ancien_nom_commune              1  ancien_nom_commune                    9             100.00
+                 id_parcelle          76940      69199000AE0692                 2349               0.51
+          ancien_id_parcelle              1  ancien_id_parcelle                    9             100.00
+                 lot1_numero           2429                   1                 7168               2.75
+                 lot2_numero           1523                   5                 1886               2.47
+                 lot3_numero            304                   5                  526               5.41
+                 lot4_numero            185                   7                  263               8.46
+                 lot5_numero            121                   8                  124               8.65
+                 nombre_lots             27                   0               196723              43.01
+                  type_local              5          DÚpendance               160172              46.01
+         code_nature_culture             23                   S               112801              58.88
+              nature_culture             23                sols               112801              58.88
+code_nature_culture_speciale             22                PARC                12117              60.42
+     nature_culture_speciale             22                Parc                12117              60.42
+             section_prefixe            294               000AB                19247               4.21
+
+--- Target Variable: valeur_fonciere (Property Value) ---
+  count: 455553
+  mean: 666168.53
+  median: 265000.0
+  std: 2416661.13
+  min: 0.5
+  max: 236160000.0
+  skewness: 23.62
+  kurtosis: 1194.17
+  q1: 150000.0
+  q3: 455300.0
+  iqr: 305300.0
+
+--- Transaction Type Distribution ---
+                                     count    pct
+nature_mutation                                  
+Vente                               405821  88.72
+Vente en l'Útat futur d'achÞvement   47971  10.49
+Echange                               2348   0.51
+Adjudication                           721   0.16
+Vente terrain Ó bÔtir                  517   0.11
+Expropriation                           34   0.01
+nature_mutation                          9   0.00
+
+--- Property Type Distribution ---
+                                           count    pct
+type_local                                             
+DÚpendance                                160172  46.01
+Appartement                               106122  30.48
+Maison                                     50588  14.53
+Local industriel. commercial ou assimilÚ   31253   8.98
+type_local                                     9   0.00
+
+--- Top 10 Communes by Transactions ---
+                        transactions
+nom_commune                         
+Villeurbanne                   32901
+Lyon 3e Arrondissement         21209
+Villefranche-sur-Sa¶ne         19075
+Lyon 7e Arrondissement         18127
+Lyon 8e Arrondissement         16478
+VÚnissieux                     11026
+Lyon 6e Arrondissement          9356
+Tassin-la-Demi-Lune             9240
+Bron                            8314
+Saint-Priest                    8103
+
+--- Mean/Median Price by Property Type ---
+                                                mean    median   count         std
+type_local                                                                        
+Appartement                                545246.46  240000.0  105740  1416094.99
+DÚpendance                                 502889.85  260000.0  159759  1257952.24
+Local industriel. commercial ou assimilÚ  2187186.42  515000.0   31195  6055481.47
+Maison                                     494972.94  385000.0   50536   637117.45
+type_local                                       NaN       NaN       0         NaN
+
+--- Surface Reelle Bati (Built Area) Analysis ---
+  count: 187064
+  mean: 110.56
+  median: 70.0
+  std: 524.25
+  min: 1.0
+  max: 61640.0
+
+--- Correlation Matrix (Key Features) ---
+                           valeur_fonciere  surface_reelle_bati  nombre_pieces_principales  surface_terrain  longitude  latitude
+valeur_fonciere                      1.000                0.171                     -0.037            0.054      0.081    -0.053
+surface_reelle_bati                  0.171                1.000                     -0.039            0.287     -0.004    -0.001
+nombre_pieces_principales           -0.037               -0.039                      1.000           -0.075     -0.138     0.071
+surface_terrain                      0.054                0.287                     -0.075            1.000     -0.093     0.071
+longitude                            0.081               -0.004                     -0.138           -0.093      1.000    -0.515
+latitude                            -0.053               -0.001                      0.071            0.071     -0.515     1.000
+
+--- Outlier Detection: valeur_fonciere (IQR method) ---
+  total_values: 455553
+  outliers_count: 48008
+  outliers_pct: 10.54
+  lower_bound: -307950.0
+  upper_bound: 913250.0
+
+--- Outlier Detection: surface_reelle_bati (IQR method) ---
+  total_values: 187064
+  outliers_count: 11242
+  outliers_pct: 6.01
+  lower_bound: -33.5
+  upper_bound: 178.5
+
+
