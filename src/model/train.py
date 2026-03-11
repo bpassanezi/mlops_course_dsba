@@ -24,6 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 DATA_DIR = os.path.join(BASE_DIR, "data")
 ARTIFACT_DIR = os.path.join(BASE_DIR, "models")
 
+ 
 TARGET = "valeur_fonciere"
 NUMERIC_FEATURES = ["surface_reelle_bati", "nombre_pieces_principales"]
 CATEGORICAL_FEATURES = ["code_departement", "type_local"]
