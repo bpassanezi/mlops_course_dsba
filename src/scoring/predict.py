@@ -10,7 +10,7 @@ def get_latest_artifacts_path():
     # The artifacts are in the root model/artifacts directory
     # Current file is in src/scoring/predict.py
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    artifact_dir = os.path.join(base_dir, "model", "artifacts")
+    artifact_dir = os.path.join(base_dir, "models")
     
     model_files = sorted(glob.glob(os.path.join(artifact_dir, "model_*.joblib")))
     contract_files = sorted(glob.glob(os.path.join(artifact_dir, "contract_*.json")))

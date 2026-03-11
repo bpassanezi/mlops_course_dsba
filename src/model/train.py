@@ -19,9 +19,10 @@ except ModuleNotFoundError:
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-MODEL_DIR = os.path.join(os.path.dirname(__file__))
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-ARTIFACT_DIR = os.path.join(os.path.dirname(__file__), "artifacts")
+# Base folder is project root
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+ARTIFACT_DIR = os.path.join(BASE_DIR, "models")
 
 TARGET = "valeur_fonciere"
 NUMERIC_FEATURES = ["surface_reelle_bati", "nombre_pieces_principales"]
