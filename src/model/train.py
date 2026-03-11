@@ -19,10 +19,12 @@ except ModuleNotFoundError:
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-MODEL_DIR = os.path.join(os.path.dirname(__file__))
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-ARTIFACT_DIR = os.path.join(os.path.dirname(__file__), "artifacts")
+# Base folder is project root
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+ARTIFACT_DIR = os.path.join(BASE_DIR, "models")
 
+ 
 TARGET = "valeur_fonciere"
 NUMERIC_FEATURES = ["surface_reelle_bati", "nombre_pieces_principales"]
 CATEGORICAL_FEATURES = ["code_departement", "type_local"]
@@ -34,12 +36,10 @@ ENGINEERED_FEATURES = ["surface_per_room", "log_surface"]
 MIN_PRICE = 10000
 
 
-def load_cleaned_data() -> pd.DataFrame:
-    """Load the cleaned dataset and filter unrealistic prices."""
-    path = os.path.join(DATA_DIR, "cleaned_dataset.csv")
-    df = pd.read_csv(path)
+def preprocess_data(df) -> pd.DataFrame():
+    """Preprocess input df"""
+
     df["code_departement"] = df["code_departement"].astype(str)
-    df = df[df[TARGET] >= MIN_PRICE].reset_index(drop=True)
 
     # Feature engineering
     df["surface_per_room"] = df["surface_reelle_bati"] / df["nombre_pieces_principales"]
@@ -47,6 +47,16 @@ def load_cleaned_data() -> pd.DataFrame:
 
     return df
 
+def load_cleaned_data() -> pd.DataFrame:
+    """Load the cleaned dataset and filter unrealistic prices."""
+    path = os.path.join(DATA_DIR, "cleaned_dataset.csv")
+
+    df = pd.read_csv(path)
+    df = df[df[TARGET] >= MIN_PRICE].reset_index(drop=True)
+
+    df = preprocess_data(df)
+
+    return df
 
 def build_pipeline() -> Pipeline:
     """Build an sklearn pipeline with preprocessing + XGBRegressor."""
