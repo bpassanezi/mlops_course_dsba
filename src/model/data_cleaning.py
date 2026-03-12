@@ -2,7 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+# Data lives in the project root's data/ folder (two levels up from src/model/)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATA_DIR = os.path.join(BASE_DIR, "data")
 
 DATASETS = [
     "bouches_du_rhone_dataset.csv",
