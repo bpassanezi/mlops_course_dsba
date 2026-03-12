@@ -36,7 +36,7 @@ ENGINEERED_FEATURES = ["surface_per_room", "log_surface"]
 MIN_PRICE = 10000
 
 
-def preprocess_data(df) -> pd.DataFrame():
+def preprocess_data(df) -> pd.DataFrame(): # type: ignore
     """Preprocess input df"""
 
     df["code_departement"] = df["code_departement"].astype(str)
