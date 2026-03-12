@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:80"
+    volumes:
+      - ./models:/app/models
+    # Wait for backend to be healthy would be ideal, but for now simple restart works
+    restart: always
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://backend/scoring/
+    depends_on:
+      - backend
+    restart: always

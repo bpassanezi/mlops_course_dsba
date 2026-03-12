@@ -5,14 +5,19 @@ from scoring.predict import scoring_function
 app = FastAPI()
 
 class ScoringRequest(BaseModel):
-    # By using pydantic, it already does data validation for us
-    address: str # required field
-    surface: float  # required field
-    num_rooms: float = None # optional field
+    surface_reelle_bati: float
+    nombre_pieces_principales: float
+    code_departement: str
+    type_local: str
 
 @app.post("/scoring/")
 async def get_scoring(request: ScoringRequest):
-    surface = request.surface
-    num_rooms = request.num_rooms if request.num_rooms is not None else 0
+    # Call the scoring function with validated data from the request
+    prediction = scoring_function(
+        surface_reelle_bati=request.surface_reelle_bati,
+        nombre_pieces_principales=request.nombre_pieces_principales,
+        code_departement=request.code_departement,
+        type_local=request.type_local
+    )
 
-    return {"score": scoring_function(surface, num_rooms)}
+    return {"score": prediction}
