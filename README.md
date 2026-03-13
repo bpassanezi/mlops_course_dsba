@@ -1,13 +1,17 @@
-# DSBA MLOps – Property Valuation Model
+# DSBA MLOps – Real Estate Price Predictor
 
-A modular MLOps project for estimating French property values (`valeur_fonciere`) from DVF (Demandes de Valeurs Foncières) open data. The system covers the full lifecycle: **data cleaning**, **model training** (XGBoost), **scoring API** (FastAPI), **tests**, and **Docker deployment**.
+An end-to-end MLOps project for estimating French property values (`valeur_fonciere`) from DVF (Demandes de Valeurs Foncières) open data. The system covers the full lifecycle: **data cleaning**, **model training** (XGBoost), **REST API** (FastAPI), **interactive dashboard** (Streamlit), **tests**, and **Docker deployment**.
 
 ---
 
-## Goal
+## Features
 
-- **Estimate** the value of a property from a small set of features: surface area, number of rooms, department code, and property type.
-- **Serve** predictions via a REST API (`POST /scoring/`).
+- **Price Estimation** – Predict property value from surface area, number of rooms, department, and property type.
+- **Price Breakdown** – XGBoost feature contributions (base value, surface, location, rooms, property type).
+- **Interactive Map** – Folium map centered on the selected department/city with distance indicators (car/train/bus from the department's main city).
+- **Department Insights** – Average & median price per m², neighborhood score.
+- **Comparable Properties** – Table of the most similar real transactions in the same department.
+- **Investment Insight** – Estimated rental yield, year-over-year market growth (computed from real data), and a composite investment score.
 
 ---
 
@@ -16,7 +20,17 @@ A modular MLOps project for estimating French property values (`valeur_fonciere`
 Property transaction data from DVF:
 https://app.dvf.etalab.gouv.fr/
 
-The `model/data/` folder contains regional CSV extracts (Paris, Rhône, Nord, Bouches-du-Rhône, Haute-Garonne). The data cleaning pipeline merges, filters, and prepares them for training.
+The `data/` folder contains regional CSV extracts for five departments:
+
+| Code | Department |
+|------|------------|
+| 13 | Bouches-du-Rhône |
+| 31 | Haute-Garonne |
+| 59 | Nord |
+| 69 | Rhône |
+| 75 | Paris |
+
+The data cleaning pipeline merges, filters, and prepares them into `data/cleaned_dataset.csv`.
 
 ---
 
@@ -38,102 +52,137 @@ pip install -r requirements.txt
 Merge raw regional CSVs into a single cleaned dataset:
 
 ```bash
-python -m model.data_cleaning
+python -m src.model.data_cleaning
 ```
 
-This produces `model/data/cleaned_dataset.csv`.
+This produces `data/cleaned_dataset.csv`.
 
 ### 3. Train the Model
 
 ```bash
-python -m model.train
+python -m src.model.train
 ```
 
-Trains an XGBoost regressor with preprocessing (StandardScaler for numeric features, OneHotEncoder for categorical features, plus engineered features like `surface_per_room` and `log_surface`). Saves versioned artifacts to `model/artifacts/`:
+Trains an XGBoost regressor with preprocessing (StandardScaler for numeric features, OneHotEncoder for categorical features, plus engineered features like `surface_per_room` and `log_surface`). Saves versioned artifacts to `models/`:
 
 - `model_<version>.joblib` – the full sklearn pipeline
 - `contract_<version>.json` – feature names, version, and evaluation metrics
 
 ### 4. Run the API
 
+From the `src/` directory:
+
 ```bash
-uvicorn api.app:app --reload --host 0.0.0.0 --port 8000
+cd src
+uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
 
-### 5. Test the API
+The API pre-loads department statistics, commune data, and the cleaned dataset at startup.
+
+### 5. Run the UI
+
+In a separate terminal, from the `src/` directory:
+
+```bash
+cd src
+streamlit run ui/app.py --server.headless true --server.port 8501
+```
+
+Open http://localhost:8501 in your browser.
+
+### 6. Test the API
 
 Send a scoring request:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/scoring/ \
      -H "Content-Type: application/json" \
-     -d '{"address": "my_address", "surface": 100, "num_rooms": 3}'
+     -d '{"surface_reelle_bati": 60, "nombre_pieces_principales": 3, "code_departement": "75", "type_local": "Appartement"}'
 ```
 
-### 6. Run Tests
+### 7. Run Tests
 
 ```bash
 pytest tests/
 ```
 
-Parametrized tests cover valid inputs, expected scores, and invalid-input validation (422 responses).
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/scoring/` | Predict price + breakdown + department stats |
+| `GET` | `/departments/` | List available departments with map metadata |
+| `GET` | `/communes/{dept}` | List communes and zipcodes for a department |
+| `GET` | `/commune_coords/{dept}/{commune}` | Get average lat/lon for a commune |
+| `GET` | `/zipcode_coords/{dept}/{zipcode}` | Get average lat/lon for a zipcode |
+| `GET` | `/comparables/` | Find N most similar properties by surface & rooms |
+| `GET` | `/investment/` | Rental yield, market growth, investment score |
 
 ---
 
 ## Docker
 
-### 1. Build the Image
+### 1. Build & Run with Docker Compose
 
 ```bash
-docker build -t scoring-api .
+docker-compose up --build
 ```
 
-### 2. Run the Container
+This starts both the FastAPI backend (port 8000) and the Streamlit UI (port 8501).
+
+### 2. Or Build Individually
 
 ```bash
-docker run -d --name scoring-container -p 8000:80 scoring-api
-```
-
-Maps port 8000 on your machine to port 80 inside the container.
-
-### 3. Verify it's Working
-
-```bash
-curl -X POST http://127.0.0.1:8000/scoring/ \
-     -H "Content-Type: application/json" \
-     -d '{"address": "my_address", "surface": 100, "num_rooms": 3}'
+docker build -f Dockerfile.api -t scoring-api .
+docker build -f Dockerfile.ui -t scoring-ui .
+docker run -d --name scoring-api -p 8000:8000 scoring-api
+docker run -d --name scoring-ui -p 8501:8501 scoring-ui
 ```
 
 ### Useful Docker Commands
 
 | Command | Description |
 |---------|-------------|
-| `docker logs scoring-container` | Check container logs |
-| `docker stop scoring-container` | Stop the container |
-| `docker rm scoring-container` | Remove the container |
+| `docker-compose logs -f` | Follow logs for all services |
+| `docker-compose down` | Stop and remove all containers |
 
 ---
 
 ## Repository Layout
 
 ```
-├── app.py                  # Legacy root-level API entrypoint
-├── api/
-│   └── app.py              # FastAPI scoring API (uses model.score)
-├── model/
-│   ├── data_cleaning.py    # Merge & clean raw DVF CSVs
-│   ├── train.py            # Train XGBoost pipeline, export artifacts
-│   ├── score.py            # Evaluation metrics (MAE, RMSE, R², etc.)
-│   ├── data/               # Raw & cleaned CSV datasets
-│   └── artifacts/          # Versioned model (.joblib) & contract (.json)
+├── data/                          # Raw & cleaned CSV datasets
+│   ├── paris_dataset.csv
+│   ├── rhone_dataset.csv
+│   ├── nord_dataset.csv
+│   ├── haute_garonne_dataset.csv
+│   ├── bouches_du_rhone_dataset.csv
+│   └── cleaned_dataset.csv
+├── models/                        # Versioned model (.joblib) & contract (.json)
 ├── src/
-│   ├── api/main.py         # Alternative API entrypoint (used by Docker)
-│   ├── scoring/predict.py  # Simple rule-based scoring function
-│   └── training/train.py   # (placeholder for future training logic)
+│   ├── api/
+│   │   └── main.py                # FastAPI app with all endpoints
+│   ├── model/
+│   │   ├── data_cleaning.py       # Merge & clean raw DVF CSVs
+│   │   ├── train.py               # Train XGBoost pipeline, export artifacts
+│   │   └── score.py               # Evaluation metrics (MAE, RMSE, R², etc.)
+│   ├── scoring/
+│   │   └── predict.py             # Scoring function with price breakdown
+│   ├── training/
+│   │   └── train.py               # Training entrypoint
+│   └── ui/
+│       └── app.py                 # Streamlit dashboard
 ├── tests/
-│   └── test_api.py         # Parametrized API tests (pytest)
-├── Dockerfile              # Container definition
-└── requirements.txt        # Python dependencies
+│   ├── test_api.py                # API endpoint tests
+│   ├── test_data_cleaning_eda.py  # Data cleaning & EDA tests
+│   └── test_model.py              # Model training & prediction tests
+├── Dockerfile.api                 # Docker image for FastAPI
+├── Dockerfile.ui                  # Docker image for Streamlit
+├── docker-compose.yml             # Compose config for both services
+├── conftest.py                    # Shared pytest fixtures
+└── requirements.txt               # Python dependencies
 ```
 
 ---
@@ -148,11 +197,18 @@ curl -X POST http://127.0.0.1:8000/scoring/ \
 | **Preprocessing** | `StandardScaler` (numeric) + `OneHotEncoder` (categorical) via `ColumnTransformer` |
 | **Target** | `valeur_fonciere` (property sale price in EUR) |
 | **Metrics** | MAE, RMSE, MedAE, MAPE, R² |
+| **Breakdown** | XGBoost `pred_contribs` for per-feature contribution to the prediction |
 
 ---
 
-## Ideas to Implement
+## UI Dashboard
 
-1. **Easier** – Add more test cases; add a `/health` or `/model_info` endpoint; use the trained XGBoost model in the API instead of the rule-based scorer.
-2. **Medium** – CI/CD with GitHub Actions (lint + test on push); confidence intervals (quantile regression); experiment tracking (log each training run to a CSV).
-3. **Larger** – Model registry (MLflow); authentication on the API; Kubernetes deployment with readiness probes; version comparison between two deployed models.
+The Streamlit dashboard provides a rich interactive experience:
+
+1. **Inputs** – Select department, city (optional), surface, rooms, and property type.
+2. **Map** – Interactive Folium map with the selected location. Distance indicators show travel time from the department's main city by car, train, and bus.
+3. **Estimated Price** – Predicted value displayed as a prominent card.
+4. **Price Breakdown** – Table showing how each feature contributes to the final estimate (base value → surface → location → rooms → property type → total).
+5. **Department Insights** – Average/median price per m², neighborhood score on a 1–10 scale.
+6. **Comparable Properties** – Table of the 5 most similar real transactions with price, surface, rooms, €/m², and difference vs. the estimate.
+7. **Investment Insight** – Estimated gross rental yield (+ monthly rent), year-over-year market growth from real transaction data, and a composite investment score (0–10).
