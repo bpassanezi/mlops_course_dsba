@@ -72,9 +72,10 @@ if st.button("Run Prediction"):
             response = requests.post(API_URL, json=payload)
             response.raise_for_status()
             result = response.json()
-            
+
             prediction = result.get("score", 0)
-            
+            breakdown = result.get("breakdown", {})
+
             # Display results in a nice card
             st.markdown(f"""
             <div class="prediction-card">
@@ -83,9 +84,66 @@ if st.button("Run Prediction"):
                 <p>Based on the latest model artifacts</p>
             </div>
             """, unsafe_allow_html=True)
-            
+
+            # Price breakdown section
+            if breakdown:
+                def _fmt(val):
+                    sign = "+" if val >= 0 else "-"
+                    return f"{sign}€{abs(val):,.0f}"
+
+                base = breakdown.get("base_value", 0)
+                surface = breakdown.get("surface_contribution", 0)
+                location = breakdown.get("location_effect", 0)
+                rooms = breakdown.get("rooms_adjustment", 0)
+                ptype = breakdown.get("property_type_adjustment", 0)
+
+                st.markdown("")
+                st.subheader("Price Breakdown")
+                st.markdown(
+                    f"""
+                    <div style="background-color:#ffffff; border-radius:10px; padding:24px;
+                                box-shadow:0 2px 8px rgba(0,0,0,0.08); font-family:monospace; font-size:1.05em;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <tr>
+                                <td style="padding:8px 0; color:#555;">Base value</td>
+                                <td style="padding:8px 0; text-align:right; font-weight:600;">€{base:,.0f}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px 0; color:#555;">Surface contribution</td>
+                                <td style="padding:8px 0; text-align:right; font-weight:600;
+                                    color:{'#2e7d32' if surface >= 0 else '#c62828'};">{_fmt(surface)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px 0; color:#555;">Location effect</td>
+                                <td style="padding:8px 0; text-align:right; font-weight:600;
+                                    color:{'#2e7d32' if location >= 0 else '#c62828'};">{_fmt(location)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px 0; color:#555;">Rooms adjustment</td>
+                                <td style="padding:8px 0; text-align:right; font-weight:600;
+                                    color:{'#2e7d32' if rooms >= 0 else '#c62828'};">{_fmt(rooms)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px 0; color:#555;">Property type adjustment</td>
+                                <td style="padding:8px 0; text-align:right; font-weight:600;
+                                    color:{'#2e7d32' if ptype >= 0 else '#c62828'};">{_fmt(ptype)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><hr style="border:none; border-top:2px solid #eee; margin:8px 0;"></td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px 0; font-weight:700; font-size:1.1em;">Estimated price</td>
+                                <td style="padding:8px 0; text-align:right; font-weight:700;
+                                    font-size:1.1em; color:#ff4b4b;">€{prediction:,.0f}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
             st.balloons()
-            
+
     except requests.exceptions.ConnectionError:
         st.error("Could not connect to the API. Make sure the FastAPI server is running.")
     except Exception as e:

@@ -13,11 +13,11 @@ class ScoringRequest(BaseModel):
 @app.post("/scoring/")
 async def get_scoring(request: ScoringRequest):
     # Call the scoring function with validated data from the request
-    prediction = scoring_function(
+    prediction, breakdown = scoring_function(
         surface_reelle_bati=request.surface_reelle_bati,
         nombre_pieces_principales=request.nombre_pieces_principales,
         code_departement=request.code_departement,
         type_local=request.type_local
     )
 
-    return {"score": prediction}
+    return {"score": prediction, "breakdown": breakdown}
