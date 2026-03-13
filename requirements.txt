@@ -7,3 +7,5 @@ xgboost
 numpy
 streamlit
 requests
+folium
+streamlit-folium
