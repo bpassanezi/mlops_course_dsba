@@ -68,7 +68,9 @@ Trains an XGBoost regressor with preprocessing (StandardScaler for numeric featu
 - `model_<version>.joblib` – the full sklearn pipeline
 - `contract_<version>.json` – feature names, version, and evaluation metrics
 
-### 4. Run the API
+### 4. Option 1: Run locally
+
+#### 4.1 Run API
 
 From the `src/` directory:
 
@@ -79,7 +81,7 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000
 
 The API pre-loads department statistics, commune data, and the cleaned dataset at startup.
 
-### 5. Run the UI
+#### 4.2 Run the UI
 
 In a separate terminal, from the `src/` directory:
 
@@ -89,6 +91,21 @@ streamlit run ui/app.py --server.headless true --server.port 8501
 ```
 
 Open http://localhost:8501 in your browser.
+
+### 5. Option 2: Run with docker
+
+#### 5.1. Build & Run with Docker Compose
+
+```bash
+docker-compose up --build
+```
+
+This starts both the FastAPI backend (port 8000) and the Streamlit UI (port 8501).
+
+#### 5.2. Access the Services
+Once the logs show that the servers have started, you can access them at:
+- **Streamlit UI**: [http://localhost:8501](http://localhost:8501)
+- **FastAPI Backend (Docs)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ### 6. Test the API
 
@@ -122,34 +139,6 @@ pytest tests/
 
 ---
 
-## Docker
-
-### 1. Build & Run with Docker Compose
-
-```bash
-docker-compose up --build
-```
-
-This starts both the FastAPI backend (port 8000) and the Streamlit UI (port 8501).
-
-### 2. Or Build Individually
-
-```bash
-docker build -f Dockerfile.api -t scoring-api .
-docker build -f Dockerfile.ui -t scoring-ui .
-docker run -d --name scoring-api -p 8000:8000 scoring-api
-docker run -d --name scoring-ui -p 8501:8501 scoring-ui
-```
-
-### Useful Docker Commands
-
-| Command | Description |
-|---------|-------------|
-| `docker-compose logs -f` | Follow logs for all services |
-| `docker-compose down` | Stop and remove all containers |
-
----
-
 ## Repository Layout
 
 ```
@@ -170,8 +159,6 @@ docker run -d --name scoring-ui -p 8501:8501 scoring-ui
 │   │   └── score.py               # Evaluation metrics (MAE, RMSE, R², etc.)
 │   ├── scoring/
 │   │   └── predict.py             # Scoring function with price breakdown
-│   ├── training/
-│   │   └── train.py               # Training entrypoint
 │   └── ui/
 │       └── app.py                 # Streamlit dashboard
 ├── tests/
