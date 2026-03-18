@@ -8,17 +8,24 @@ import math
 
 # Set page config for a premium feel
 st.set_page_config(
-    page_title="Real Estate Price Predictor",
-    page_icon="🏠",
-    layout="wide"
+    page_title="ImmoPrice",
+    page_icon="🏢",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# API URL
+# API Setup
 DEFAULT_API_URL = os.getenv("API_URL", "http://localhost:8000")
-API_URL = st.sidebar.text_input("API Base URL", value=DEFAULT_API_URL)
+API_URL = DEFAULT_API_URL
+
+# --- Initialize Session State for Pagination ---
+if "report_data" not in st.session_state:
+    st.session_state.report_data = None
+if "current_page" not in st.session_state:
+    st.session_state.current_page = 1
 
 # ---------------------------------------------------------------------------
-# Fetch department metadata from API
+# Fetch metadata from API 
 # ---------------------------------------------------------------------------
 @st.cache_data(ttl=600)
 def fetch_departments(api_url):
@@ -47,521 +54,451 @@ def fetch_commune_coords(api_url, dept_code, commune_name):
     except Exception:
         return None
 
-@st.cache_data(ttl=600)
-def fetch_zipcode_coords(api_url, dept_code, zipcode):
-    try:
-        r = requests.get(f"{api_url}/zipcode_coords/{dept_code}/{zipcode}", timeout=5)
-        r.raise_for_status()
-        return r.json().get("coords")
-    except Exception:
-        return None
-
-
-# Department main city coords (for distance calculation)
 DEPT_MAIN_CITY_COORDS = {
-    "13": (43.2965, 5.3698),
-    "31": (43.6047, 1.4442),
-    "59": (50.6292, 3.0573),
-    "69": (45.7640, 4.8357),
+    "13": (43.2965, 5.3698), "31": (43.6047, 1.4442),
+    "59": (50.6292, 3.0573), "69": (45.7640, 4.8357),
     "75": (48.8566, 2.3522),
 }
 DEPT_MAIN_CITY = {
-    "13": "Marseille",
-    "31": "Toulouse",
-    "59": "Lille",
-    "69": "Lyon",
-    "75": "Paris",
+    "13": "Marseille", "31": "Toulouse", "59": "Lille",
+    "69": "Lyon", "75": "Paris",
 }
 PARIS_COORDS = (48.8566, 2.3522)
 
-def _haversine_km(lat1, lon1, lat2, lon2):
-    """Haversine distance in km."""
-    R = 6371
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
-    return R * 2 * math.asin(math.sqrt(a))
-
-
 # ---------------------------------------------------------------------------
-# Custom CSS
+# Custom CSS (Top Nav + App Styling)
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
+    /* Import a premium Serif font (Merriweather) and clean Sans-Serif (Inter) */
+    @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
+    
+    .block-container { padding-top: 0rem !important; }
+    
+    /* Base typography */
+    html, body, [class*="css"] { 
+        font-family: 'Inter', -apple-system, sans-serif; 
+        color: #111111;
+    }
+    
+    /* Apply Serif to Streamlit Headers */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Merriweather', Georgia, serif !important;
+        font-weight: 400 !important;
+        color: #111111 !important;
+        letter-spacing: -0.01em;
+    }
+
+    /* Hide the default Streamlit header */
+    [data-testid="stHeader"] { display: none !important; }
+
+    /* --- MINIMALIST NAVBAR --- */
+    .top-navbar {
+        background-color: #FDFCFB; 
+        padding: 1.2rem 2rem; 
+        margin: 0rem -4rem 2rem -4rem;
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        border-bottom: 1px solid #EAEAEA;
+    }
+    .top-navbar .logo { 
+        color: #111111; 
+        font-size: 1.3em; 
+        font-family: 'Merriweather', serif;
+        font-weight: 700; 
+        display: flex; 
+        align-items: center; 
+        gap: 12px;
+    }
+    .top-navbar .logo span { color: #8A857D; font-weight: 400; font-style: italic; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links div { 
+        color: #666666; 
+        font-weight: 500; 
+        font-size: 0.9em; 
+        cursor: pointer; 
+        transition: color 0.2s ease; 
+    }
+    .nav-links div:hover { color: #111111; }
+
+    /* --- BUTTONS --- */
     .stButton>button {
-        width: 100%;
-        border-radius: 8px;
-        height: 3em;
-        background-color: #ff4b4b;
-        color: white;
-        font-weight: bold;
-        font-size: 1.05em;
+        width: 100%; 
+        border-radius: 4px; 
+        height: 2.8em; 
+        background-color: #2A2927;
+        color: #FDFCFB; 
+        font-weight: 500; 
+        font-size: 1em; 
+        border: 1px solid #2A2927; 
+        transition: all 0.2s ease;
     }
+    .stButton>button:hover { 
+        background-color: #403E3A; 
+        border-color: #403E3A;
+        color: white;
+    }
+    /* Nav Buttons overrides */
+    .nav-btn>button { 
+        background-color: #FDFCFB; 
+        color: #111111; 
+        border: 1px solid #D6D3CD; 
+    }
+    .nav-btn>button:hover { 
+        background-color: #F4F2EE; 
+        border-color: #111111; 
+        color: #111111;
+    }
+
+    /* --- CARDS & UI ELEMENTS --- */
     .prediction-card {
-        padding: 24px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        text-align: center;
-        color: white;
+        padding: 32px 24px; 
+        background-color: #FFFFFF;
+        border-radius: 8px; 
+        text-align: center; 
+        border: 1px solid #EAEAEA;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .prediction-value {
-        font-size: 2.8em;
-        font-weight: 800;
-        margin: 8px 0;
+    .prediction-value { 
+        font-family: 'Merriweather', serif;
+        font-size: 3em; 
+        font-weight: 400; 
+        margin: 12px 0; 
+        color: #111111; 
     }
     .stat-card {
-        padding: 18px;
-        background-color: #ffffff;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        text-align: center;
-        margin-bottom: 10px;
+        padding: 20px; 
+        background-color: #FFFFFF; 
+        border-radius: 8px;
+        border: 1px solid #EAEAEA; 
+        text-align: center; 
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .stat-value {
-        font-size: 1.8em;
-        font-weight: 700;
-        color: #ff4b4b;
-    }
-    .stat-label {
-        color: #888;
-        font-size: 0.9em;
-        margin-top: 4px;
-    }
-    .distance-row {
-        display: flex;
-        gap: 24px;
-        justify-content: center;
-        flex-wrap: wrap;
-        margin-top: 8px;
-    }
-    .distance-item {
-        text-align: center;
-        min-width: 100px;
-    }
-    .distance-icon {
-        font-size: 1.6em;
-        animation: bounce 2s ease-in-out infinite;
-    }
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-6px); }
-    }
-    .distance-val {
-        font-weight: 600;
-        font-size: 1.1em;
-        margin-top: 2px;
-    }
-    .distance-label {
-        color: #888;
-        font-size: 0.8em;
-    }
-    .neighborhood-bar {
-        height: 14px;
-        border-radius: 7px;
-        background: linear-gradient(90deg, #c62828 0%, #ff9800 30%, #ffeb3b 50%, #8bc34a 70%, #2e7d32 100%);
-        position: relative;
-        margin-top: 8px;
-    }
-    .neighborhood-marker {
-        position: absolute;
-        top: -4px;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: white;
-        border: 3px solid #333;
-        transform: translateX(-50%);
-    }
+    .stat-value { font-size: 1.6em; font-weight: 500; color: #111111; }
+    .stat-label { color: #666666; font-size: 0.85em; font-weight: 500; margin-top: 6px; }
+    
+    /* Progress Indicator */
+    .step-indicator { display: flex; justify-content: center; gap: 6px; margin-bottom: 2rem; }
+    .step-dot { height: 4px; width: 32px; border-radius: 2px; background-color: #EAEAEA; transition: all 0.3s;}
+    .step-dot.active { background-color: #2A2927; }
 </style>
+
+<div class="top-navbar">
+    <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke="#111111" stroke-width="1.5"/>
+            <path d="M8 12L12 8L16 12" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 16V8" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        RealEstate<span>AI</span>
+    </div>
+    <div class="nav-links">
+        <div style="color: #111111; border-bottom: 1px solid #111111; padding-bottom: 2px;">Valuation</div>
+    </div>
+</div>
 """, unsafe_allow_html=True)
-
 # ---------------------------------------------------------------------------
-# Title
+# Data Loading & Layout
 # ---------------------------------------------------------------------------
-st.title("🏠 Real Estate Price Predictor")
-st.write("Enter the property details below to estimate its market value.")
-
-# Load departments
 dept_data = fetch_departments(API_URL)
 if dept_data is None:
-    st.error("Cannot connect to the API. Make sure the FastAPI server is running.")
+    st.error("Cannot connect to the API.")
     st.stop()
 
 departments = dept_data["departments"]
 dept_centers = dept_data["centers"]
 dept_zooms = dept_data["zoom_levels"]
-
-# Format department options
 dept_options = {code: f"{code} — {name}" for code, name in departments.items()}
 
-# =====================================================================
-# INPUT SECTION
-# =====================================================================
-st.subheader("📋 Property Details")
+# Layout
+main_col1, main_col2 = st.columns([1, 1.4], gap="large")
 
-# Department selection (fixed list)
-dept_codes = list(dept_options.keys())
-dept_labels = list(dept_options.values())
-selected_label = st.selectbox("Department", dept_labels, index=dept_codes.index("75") if "75" in dept_codes else 0)
-selected_dept = dept_codes[dept_labels.index(selected_label)]
+with main_col1:
+    st.info("Enter property details and click 'Generate Estimate' to build the report.")
+    st.markdown("<h3 style='color: #1E293B; font-weight: 600; margin-top: 0;'>Property Parameters</h3>", unsafe_allow_html=True)
+    
+    dept_codes = list(dept_options.keys())
+    dept_labels = list(dept_options.values())
+    selected_label = st.selectbox("Department", dept_labels, index=dept_codes.index("75") if "75" in dept_codes else 0)
+    selected_dept = dept_codes[dept_labels.index(selected_label)]
+    
+    commune_data = fetch_communes(API_URL, selected_dept)
+    communes_list = commune_data.get("communes", [])
+    city_name = st.selectbox("City (Optional)", [""] + communes_list, index=0)
+    
+    ic1, ic2 = st.columns(2)
+    with ic1:
+        surface = st.number_input("Surface Area (m²)", min_value=1.0, value=60.0, step=1.0)
+        rooms = st.number_input("Total Rooms", min_value=1.0, value=3.0, step=1.0)
+    with ic2:
+        type_local = st.selectbox("Property Type", ["Appartement", "Maison"])
+        
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    if st.button("Generate Estimate", use_container_width=True):
+        payload = {
+            "surface_reelle_bati": surface,
+            "nombre_pieces_principales": rooms,
+            "code_departement": selected_dept,
+            "type_local": type_local,
+        }
+        with st.spinner("Compiling full market report..."):
+            try:
+                # 1. Get Score & Breakdown
+                score_resp = requests.post(f"{API_URL}/scoring/", json=payload).json()
+                prediction = score_resp.get("score", 0)
+                
+                # 2. Get Comparables
+                comp_resp = requests.get(f"{API_URL}/comparables/", params={
+                    "code_departement": selected_dept, "surface_reelle_bati": surface,
+                    "nombre_pieces_principales": rooms, "type_local": type_local, "n": 5
+                }).json()
+                
+                # 3. Get Investment data
+                inv_resp = {}
+                try:
+                    inv_resp = requests.get(f"{API_URL}/investment/", params={
+                        "code_departement": selected_dept, "prediction": prediction, "surface_reelle_bati": surface
+                    }).json()
+                except:
+                    pass # Handled gracefully later
+                
+                # Save ALL data to session state
+                st.session_state.report_data = {
+                    "score_data": score_resp,
+                    "comp_data": comp_resp.get("comparables", []),
+                    "inv_data": inv_resp,
+                    "city": city_name,
+                    "surface": surface,
+                    "dept_name": departments.get(selected_dept, selected_dept)
+                }
+                st.session_state.current_page = 1 
+            except Exception as e:
+                st.error(f"Error compiling report: {e}")
 
-# Fetch communes for selected department
-commune_data = fetch_communes(API_URL, selected_dept)
-communes_list = commune_data.get("communes", [])
-zipcodes_list = commune_data.get("zipcodes", [])
+with main_col2:
+    if st.session_state.report_data is None:
+        # Initial Empty State Map
+        st.markdown("<h3 style='color: #1E293B; font-weight: 600; margin-top: 0;'>Location Overview</h3>", unsafe_allow_html=True)
+        map_center = dept_centers.get(selected_dept, [46.6, 2.5])
+        if city_name:
+            coords = fetch_commune_coords(API_URL, selected_dept, city_name)
+            if coords: map_center = coords
+                
+        m = folium.Map(location=map_center, zoom_start=11 if city_name else 6, tiles="CartoDB positron")
+        st_folium(m, width=None, height=450, returned_objects=[])
 
-# Optional city
-city_name = st.selectbox("City (optional)", [""] + communes_list, index=0)
-
-# Core inputs
-ic1, ic2, ic3 = st.columns(3)
-with ic1:
-    surface = st.number_input("Surface (m²)", min_value=1.0, value=60.0, step=1.0)
-with ic2:
-    rooms = st.number_input("Number of Rooms", min_value=1.0, value=3.0, step=1.0)
-with ic3:
-    type_local = st.selectbox("Property Type", ["Appartement", "Maison"])
-
-# ---------------------------------------------------------------------------
-# Interactive Map + Distance
-# ---------------------------------------------------------------------------
-st.subheader("🗺️ Location Map")
-
-# Determine map center & zoom
-map_center = dept_centers.get(selected_dept, [46.6, 2.5])
-map_zoom = dept_zooms.get(selected_dept, 6)
-
-location_coords = None
-
-# If city provided, try to zoom further
-if city_name:
-    coords = fetch_commune_coords(API_URL, selected_dept, city_name)
-    if coords:
-        map_center = coords
-        map_zoom = 13
-        location_coords = coords
-
-m = folium.Map(location=map_center, zoom_start=map_zoom, tiles="CartoDB positron")
-if location_coords:
-    label = city_name if city_name else "Selected location"
-    folium.Marker(
-        location=location_coords,
-        popup=label,
-        tooltip=label,
-        icon=folium.Icon(color="red", icon="home", prefix="fa"),
-    ).add_to(m)
-st_folium(m, width=None, height=400, returned_objects=[])
-
-# Distance info
-if location_coords:
-    lat, lon = location_coords
-    dist_paris = _haversine_km(lat, lon, *PARIS_COORDS)
-    main_city = DEPT_MAIN_CITY.get(selected_dept, "Main city")
-    mc_coords = DEPT_MAIN_CITY_COORDS.get(selected_dept)
-    dist_main = _haversine_km(lat, lon, *mc_coords) if mc_coords else None
-
-    ref_city = main_city if selected_dept != "75" else "Paris center"
-    ref_dist = dist_main if dist_main is not None else dist_paris
-
-    car_speed, train_speed, bus_speed = 80, 200, 50
-    car_time = ref_dist / car_speed * 60
-    train_time = ref_dist / train_speed * 60
-    bus_time = ref_dist / bus_speed * 60
-
-    st.markdown(f"**Distance to {ref_city}**")
-    st.markdown(f"""
-    <div class="distance-row">
-        <div class="distance-item">
-            <div class="distance-icon">🚗</div>
-            <div class="distance-val">{car_time:.0f} min</div>
-            <div class="distance-label">by car</div>
+    else:
+        # --- CAROUSEL HEADER ---
+        st.markdown("<h3 style='color: #1E293B; font-weight: 600; margin-top: 0;'>Valuation Report</h3>", unsafe_allow_html=True)
+        current = st.session_state.current_page
+        
+        # Dots
+        st.markdown(f"""
+        <div class="step-indicator">
+            <div class="step-dot {'active' if current==1 else ''}"></div>
+            <div class="step-dot {'active' if current==2 else ''}"></div>
+            <div class="step-dot {'active' if current==3 else ''}"></div>
         </div>
-        <div class="distance-item">
-            <div class="distance-icon">🚆</div>
-            <div class="distance-val">{train_time:.0f} min</div>
-            <div class="distance-label">by train</div>
-        </div>
-        <div class="distance-item">
-            <div class="distance-icon">🚌</div>
-            <div class="distance-val">{bus_time:.0f} min</div>
-            <div class="distance-label">by bus</div>
-        </div>
-    </div>
-    <p style="color:#aaa; font-size:0.75em; text-align:center; margin-top:4px;">
-        Straight-line distance: {ref_dist:.0f} km &mdash; times are approximate
-    </p>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-# Predict button
-st.markdown("---")
-run_prediction = st.button("🔍 Run Prediction", use_container_width=True)
-
-# =====================================================================
-# OUTPUT SECTION
-# =====================================================================
-if run_prediction:
-    payload = {
-        "surface_reelle_bati": surface,
-        "nombre_pieces_principales": rooms,
-        "code_departement": selected_dept,
-        "type_local": type_local,
-    }
-
-    try:
-        with st.spinner("Calculating..."):
-            response = requests.post(f"{API_URL}/scoring/", json=payload)
-            response.raise_for_status()
-            result = response.json()
-
-            prediction = result.get("score", 0)
-            breakdown = result.get("breakdown", {})
-            dept_stats = result.get("dept_stats", {})
-
-            # --- Estimated Value Card ---
+        data = st.session_state.report_data
+        prediction = data["score_data"].get("score", 0)
+        
+        # ==========================================================
+        # PAGE 1: VALUATION & BREAKDOWN
+        # ==========================================================
+        if current == 1:
             st.markdown(f"""
             <div class="prediction-card">
-                <h3 style="margin:0; opacity:0.9;">Estimated Value</h3>
+                <h3 style="margin:0; font-weight:500; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; font-size:1em;">Projected Market Value</h3>
                 <div class="prediction-value">€{prediction:,.0f}</div>
-                <p style="margin:0; opacity:0.8; font-size:0.9em;">Based on the latest model artifacts</p>
+                <p style="margin:0; color:#64748B; font-size:0.9em;">Based on real-time market artifacts</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            breakdown = data["score_data"].get("breakdown", {})
+            if breakdown:
+                def _fmt(val):
+                    return f"{'+' if val >= 0 else '-'}€{abs(val):,.0f}"
+
+                base = breakdown.get("base_value", 0)
+                surf_c = breakdown.get("surface_contribution", 0)
+                loc_c = breakdown.get("location_effect", 0)
+                rooms_c = breakdown.get("rooms_adjustment", 0)
+                ptype_c = breakdown.get("property_type_adjustment", 0)
+
+                st.markdown("<br><h4 style='color: #1E293B; font-weight: 600;'>Valuation Breakdown</h4>", unsafe_allow_html=True)
+                st.markdown(
+                    f"""
+                    <div style="background-color:#ffffff; border-radius:10px; padding:24px; border: 1px solid #E2E8F0;
+                                box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); font-size:1.05em;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                <td style="padding:12px 0; color:#64748B;">Base Benchmark</td>
+                                <td style="padding:12px 0; text-align:right; font-weight:600; color:#0F172A;">€{base:,.0f}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                <td style="padding:12px 0; color:#64748B;">Surface Area Adjustment</td>
+                                <td style="padding:12px 0; text-align:right; font-weight:600; color:{'#10B981' if surf_c >= 0 else '#EF4444'};">{_fmt(surf_c)}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                <td style="padding:12px 0; color:#64748B;">Location Premium</td>
+                                <td style="padding:12px 0; text-align:right; font-weight:600; color:{'#10B981' if loc_c >= 0 else '#EF4444'};">{_fmt(loc_c)}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                <td style="padding:12px 0; color:#64748B;">Room Layout Adjustment</td>
+                                <td style="padding:12px 0; text-align:right; font-weight:600; color:{'#10B981' if rooms_c >= 0 else '#EF4444'};">{_fmt(rooms_c)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 0; color:#64748B;">Property Type Adjustment</td>
+                                <td style="padding:12px 0; text-align:right; font-weight:600; color:{'#10B981' if ptype_c >= 0 else '#EF4444'};">{_fmt(ptype_c)}</td>
+                            </tr>
+                            <tr><td colspan="2"><hr style="border:none; border-top:2px solid #CBD5E1; margin:8px 0;"></td></tr>
+                            <tr>
+                                <td style="padding:8px 0; font-weight:700; color:#0F172A; font-size:1.1em;">Final Estimate</td>
+                                <td style="padding:8px 0; text-align:right; font-weight:700; font-size:1.1em; color:#2563EB;">€{prediction:,.0f}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    """, unsafe_allow_html=True
+                )
+
+        # ==========================================================
+        # PAGE 2: MARKET DATA & MAP
+        # ==========================================================
+        elif current == 2:
+            dept_stats = data["score_data"].get("dept_stats", {})
+            avg_pm2 = dept_stats.get("avg_price_per_m2", 0)
+            median_pm2 = dept_stats.get("median_price_per_m2", 0)
+            tx_count = dept_stats.get("transaction_count", 0)
+
+            dept_avg_total = avg_pm2 * data["surface"] if avg_pm2 else 0
+            if dept_avg_total > 0:
+                ratio = prediction / dept_avg_total
+                raw_score = 5 + (ratio - 1) * 3
+                neighborhood_score = max(1.0, min(10.0, round(raw_score, 1)))
+            else:
+                neighborhood_score = 5.0
+
+            st.markdown("<h4 style='color: #1E293B; font-weight: 600;'>Market Context</h4>", unsafe_allow_html=True)
+            colA, colB = st.columns(2)
+            with colA: st.markdown(f'<div class="stat-card"><div class="stat-value">€{avg_pm2:,.0f}</div><div class="stat-label">Avg. Price / m²</div></div>', unsafe_allow_html=True)
+            with colB: st.markdown(f'<div class="stat-card"><div class="stat-value">€{median_pm2:,.0f}</div><div class="stat-label">Median Price / m²</div></div>', unsafe_allow_html=True)
+
+            score_pct = (neighborhood_score - 1) / 9 * 100
+            score_color = "#10B981" if neighborhood_score >= 7 else "#F59E0B" if neighborhood_score >= 4 else "#EF4444"
+            score_label = "Premium Area" if neighborhood_score >= 8 else "Desirable" if neighborhood_score >= 6 else "Standard" if neighborhood_score >= 4 else "Below Market"
+
+            st.markdown(f"""
+            <div class="stat-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:600; font-size:1.05em; color:#0F172A;">Desirability Index</span>
+                    <span style="font-weight:700; font-size:1.4em; color:{score_color};">{neighborhood_score}/10</span>
+                </div>
+                <div class="neighborhood-bar"><div class="neighborhood-marker" style="left:{score_pct}%;"></div></div>
+                <div style="text-align:right; margin-top:10px; color:{score_color}; font-weight:600;">{score_label}</div>
+                <div class="stat-label" style="margin-top:2px;">Analyzed {tx_count:,} local transactions</div>
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown("")
+            map_center = dept_centers.get(selected_dept, [46.6, 2.5])
+            if data["city"]:
+                coords = fetch_commune_coords(API_URL, selected_dept, data["city"])
+                if coords: map_center = coords
+            m = folium.Map(location=map_center, zoom_start=11, tiles="CartoDB positron")
+            st_folium(m, width=None, height=200, returned_objects=[])
 
-            # --- Price Breakdown + Department Insights side by side ---
-            res_left, res_right = st.columns(2, gap="large")
+        # ==========================================================
+        # PAGE 3: INVESTMENT & COMPARABLES
+        # ==========================================================
+        elif current == 3:
+            st.markdown("<h4 style='color: #1E293B; font-weight: 600;'>Investment Analytics</h4>", unsafe_allow_html=True)
+            
+            inv = data["inv_data"]
+            if inv:
+                rental_yield = inv.get("rental_yield", 0)
+                market_growth = inv.get("market_growth", 0)
+                inv_score = inv.get("investment_score", 0)
 
-            with res_left:
-                if breakdown:
-                    def _fmt(val):
-                        sign = "+" if val >= 0 else "-"
-                        return f"{sign}€{abs(val):,.0f}"
-
-                    base = breakdown.get("base_value", 0)
-                    surf_c = breakdown.get("surface_contribution", 0)
-                    loc_c = breakdown.get("location_effect", 0)
-                    rooms_c = breakdown.get("rooms_adjustment", 0)
-                    ptype_c = breakdown.get("property_type_adjustment", 0)
-
-                    st.subheader("📊 Price Breakdown")
-                    st.markdown(
-                        f"""
-                        <div style="background-color:#ffffff; border-radius:10px; padding:24px;
-                                    box-shadow:0 2px 8px rgba(0,0,0,0.08); font-family:monospace; font-size:1.05em;">
-                            <table style="width:100%; border-collapse:collapse;">
-                                <tr>
-                                    <td style="padding:8px 0; color:#555;">Base value</td>
-                                    <td style="padding:8px 0; text-align:right; font-weight:600; white-space:nowrap;">€{base:,.0f}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:8px 0; color:#555;">Surface contribution</td>
-                                    <td style="padding:8px 0; text-align:right; font-weight:600; white-space:nowrap;
-                                        color:{'#2e7d32' if surf_c >= 0 else '#c62828'};">{_fmt(surf_c)}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:8px 0; color:#555;">Location effect</td>
-                                    <td style="padding:8px 0; text-align:right; font-weight:600; white-space:nowrap;
-                                        color:{'#2e7d32' if loc_c >= 0 else '#c62828'};">{_fmt(loc_c)}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:8px 0; color:#555;">Rooms adjustment</td>
-                                    <td style="padding:8px 0; text-align:right; font-weight:600; white-space:nowrap;
-                                        color:{'#2e7d32' if rooms_c >= 0 else '#c62828'};">{_fmt(rooms_c)}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:8px 0; color:#555;">Property type adj.</td>
-                                    <td style="padding:8px 0; text-align:right; font-weight:600; white-space:nowrap;
-                                        color:{'#2e7d32' if ptype_c >= 0 else '#c62828'};">{_fmt(ptype_c)}</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2"><hr style="border:none; border-top:2px solid #eee; margin:8px 0;"></td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:8px 0; font-weight:700; font-size:1.1em;">Estimated price</td>
-                                    <td style="padding:8px 0; text-align:right; font-weight:700; white-space:nowrap;
-                                        font-size:1.1em; color:#ff4b4b;">€{prediction:,.0f}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
-            with res_right:
-                st.subheader("📈 Department Insights")
-
-                avg_pm2 = dept_stats.get("avg_price_per_m2", 0)
-                median_pm2 = dept_stats.get("median_price_per_m2", 0)
-                tx_count = dept_stats.get("transaction_count", 0)
-
-                dept_avg_total = avg_pm2 * surface if avg_pm2 else 0
-                if dept_avg_total > 0:
-                    ratio = prediction / dept_avg_total
-                    raw_score = 5 + (ratio - 1) * 3
-                    neighborhood_score = max(1.0, min(10.0, round(raw_score, 1)))
-                else:
-                    neighborhood_score = 5.0
-
-                s1, s2 = st.columns(2)
-                with s1:
-                    st.markdown(f"""
-                    <div class="stat-card">
-                        <div class="stat-value">€{avg_pm2:,.0f}</div>
-                        <div class="stat-label">Avg. price per m² in department</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                with s2:
-                    st.markdown(f"""
-                    <div class="stat-card">
-                        <div class="stat-value">€{median_pm2:,.0f}</div>
-                        <div class="stat-label">Median price per m² in department</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                score_pct = (neighborhood_score - 1) / 9 * 100
-                score_color = "#2e7d32" if neighborhood_score >= 7 else "#ff9800" if neighborhood_score >= 4 else "#c62828"
-                score_label = "Excellent" if neighborhood_score >= 8 else "Good" if neighborhood_score >= 6 else "Average" if neighborhood_score >= 4 else "Below average"
-
-                st.markdown(f"""
-                <div class="stat-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-weight:600; font-size:1.05em;">Neighborhood Score</span>
-                        <span style="font-weight:700; font-size:1.4em; color:{score_color};">{neighborhood_score}/10</span>
-                    </div>
-                    <div class="neighborhood-bar">
-                        <div class="neighborhood-marker" style="left:{score_pct}%;"></div>
-                    </div>
-                    <div style="text-align:right; margin-top:6px; color:{score_color}; font-weight:500;">{score_label}</div>
-                    <div class="stat-label" style="margin-top:6px;">
-                        Based on {tx_count:,} transactions in {departments.get(selected_dept, selected_dept)}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            # --- Comparable Properties ---
-            st.markdown("")
-            st.subheader("🏘️ Comparable Properties")
-            try:
-                comp_resp = requests.get(f"{API_URL}/comparables/", params={
-                    "code_departement": selected_dept,
-                    "surface_reelle_bati": surface,
-                    "nombre_pieces_principales": rooms,
-                    "type_local": type_local,
-                    "n": 5,
-                }, timeout=10)
-                comp_resp.raise_for_status()
-                comparables = comp_resp.json().get("comparables", [])
-
-                if comparables:
-                    # Build HTML table
-                    rows_html = ""
-                    for i, comp in enumerate(comparables):
-                        bg = "#f9f9f9" if i % 2 == 0 else "#ffffff"
-                        diff = comp["price"] - prediction
-                        diff_color = "#2e7d32" if diff >= 0 else "#c62828"
-                        diff_sign = "+" if diff >= 0 else "-"
-                        rows_html += (
-                            f'<tr style="background-color:{bg};">'
-                            f'<td style="padding:10px 12px;">{comp["type"]}</td>'
-                            f'<td style="padding:10px 12px; text-align:right; white-space:nowrap;">€{comp["price"]:,.0f}</td>'
-                            f'<td style="padding:10px 12px; text-align:right;">{comp["surface"]:.0f} m²</td>'
-                            f'<td style="padding:10px 12px; text-align:center;">{comp["rooms"]}</td>'
-                            f'<td style="padding:10px 12px; text-align:right; white-space:nowrap;">€{comp["price_per_m2"]:,.0f}</td>'
-                            f'<td style="padding:10px 12px; text-align:right; white-space:nowrap; color:{diff_color}; font-weight:600;">{diff_sign}€{abs(diff):,.0f}</td>'
-                            f'</tr>'
-                        )
-
-                    dept_name = departments.get(selected_dept, selected_dept)
-                    comp_html = (
-                        '<div style="background-color:#ffffff; border-radius:10px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08); overflow-x:auto;">'
-                        '<table style="width:100%; border-collapse:collapse; font-size:0.95em;">'
-                        '<thead><tr style="border-bottom:2px solid #eee;">'
-                        '<th style="padding:10px 12px; text-align:left; color:#888; font-weight:600;">Type</th>'
-                        '<th style="padding:10px 12px; text-align:right; color:#888; font-weight:600;">Price</th>'
-                        '<th style="padding:10px 12px; text-align:right; color:#888; font-weight:600;">Surface</th>'
-                        '<th style="padding:10px 12px; text-align:center; color:#888; font-weight:600;">Rooms</th>'
-                        '<th style="padding:10px 12px; text-align:right; color:#888; font-weight:600;">€/m²</th>'
-                        '<th style="padding:10px 12px; text-align:right; color:#888; font-weight:600;">vs Estimate</th>'
-                        '</tr></thead>'
-                        f'<tbody>{rows_html}</tbody>'
-                        '</table>'
-                        f'<p style="color:#aaa; font-size:0.75em; margin:10px 0 0 0;">Showing {len(comparables)} most similar properties in {dept_name}</p>'
-                        '</div>'
-                    )
-                    st.markdown(comp_html, unsafe_allow_html=True)
-                else:
-                    st.info("No comparable properties found in this department.")
-            except Exception:
-                st.warning("Could not load comparable properties.")
-
-            # --- Investment Insight ---
-            st.markdown("")
-            st.subheader("💰 Investment Insight")
-            try:
-                inv_resp = requests.get(f"{API_URL}/investment/", params={
-                    "code_departement": selected_dept,
-                    "prediction": prediction,
-                    "surface_reelle_bati": surface,
-                }, timeout=10)
-                inv_resp.raise_for_status()
-                inv = inv_resp.json()
-
-                rental_yield = inv["rental_yield"]
-                monthly_rent = inv["monthly_rent"]
-                market_growth = inv["market_growth"]
-                inv_score = inv["investment_score"]
-
-                growth_color = "#2e7d32" if market_growth >= 0 else "#c62828"
+                growth_color = "#10B981" if market_growth >= 0 else "#EF4444"
                 growth_sign = "+" if market_growth >= 0 else ""
-                score_color = "#2e7d32" if inv_score >= 7 else "#ff9800" if inv_score >= 4 else "#c62828"
-                score_label = "Excellent" if inv_score >= 8 else "Strong" if inv_score >= 6.5 else "Moderate" if inv_score >= 4 else "Weak"
-                score_pct = inv_score / 10 * 100
+                score_color = "#10B981" if inv_score >= 7 else "#F59E0B" if inv_score >= 4 else "#EF4444"
+                score_pct = (inv_score / 10) * 100
 
                 ic1, ic2, ic3 = st.columns(3)
-                with ic1:
-                    st.markdown(
-                        '<div class="stat-card">'
-                        f'<div class="stat-value">{rental_yield:.1f}%</div>'
-                        '<div class="stat-label">Est. Gross Rental Yield</div>'
-                        f'<div style="color:#888; font-size:0.85em; margin-top:4px;">≈ €{monthly_rent:,.0f}/month</div>'
-                        '</div>',
-                        unsafe_allow_html=True,
-                    )
-                with ic2:
-                    st.markdown(
-                        '<div class="stat-card">'
-                        f'<div class="stat-value" style="color:{growth_color};">{growth_sign}{market_growth:.1f}%</div>'
-                        '<div class="stat-label">Market Growth (Last Year)</div>'
-                        f'<div style="color:#888; font-size:0.85em; margin-top:4px;">Median €/m² YoY change</div>'
-                        '</div>',
-                        unsafe_allow_html=True,
-                    )
+                with ic1: st.markdown(f'<div class="stat-card"><div class="stat-value">{rental_yield:.1f}%</div><div class="stat-label">Est. Gross Yield</div></div>', unsafe_allow_html=True)
+                with ic2: st.markdown(f'<div class="stat-card"><div class="stat-value" style="color:{growth_color};">{growth_sign}{market_growth:.1f}%</div><div class="stat-label">YoY Capital Growth</div></div>', unsafe_allow_html=True)
                 with ic3:
-                    st.markdown(
-                        '<div class="stat-card">'
-                        f'<div style="display:flex; justify-content:space-between; align-items:center;">'
-                        f'<span style="font-weight:600; font-size:1.05em;">Score</span>'
-                        f'<span style="font-weight:700; font-size:1.4em; color:{score_color};">{inv_score}/10</span>'
-                        f'</div>'
-                        '<div class="neighborhood-bar">'
-                        f'<div class="neighborhood-marker" style="left:{score_pct}%;"></div>'
-                        '</div>'
-                        f'<div style="text-align:right; margin-top:6px; color:{score_color}; font-weight:500;">{score_label}</div>'
-                        '<div class="stat-label" style="margin-top:4px;">Yield + Growth + Affordability</div>'
-                        '</div>',
-                        unsafe_allow_html=True,
+                    st.markdown(f"""
+                    <div class="stat-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:600; font-size:1.05em; color:#0F172A;">Rating</span>
+                            <span style="font-weight:700; font-size:1.2em; color:{score_color};">{inv_score}/10</span>
+                        </div>
+                        <div class="neighborhood-bar" style="margin-top:6px;"><div class="neighborhood-marker" style="width:14px; height:14px; top:-4px; left:{score_pct}%;"></div></div>
+                        <div class="stat-label" style="margin-top:8px;">Asset Score</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("Investment data not available for this configuration.")
+
+            st.markdown("<br><h4 style='color: #1E293B; font-weight: 600;'>Recent Comparables</h4>", unsafe_allow_html=True)
+            comparables = data["comp_data"]
+            if comparables:
+                rows_html = ""
+                for i, comp in enumerate(comparables):
+                    bg = "#F8FAFC" if i % 2 == 0 else "#ffffff"
+                    diff = comp["price"] - prediction
+                    diff_color = "#10B981" if diff >= 0 else "#EF4444"
+                    rows_html += (
+                        f'<tr style="background-color:{bg}; border-bottom: 1px solid #F1F5F9;">'
+                        f'<td style="padding:10px 12px; color:#334155;">{comp["type"]}</td>'
+                        f'<td style="padding:10px 12px; text-align:right; font-weight:600;">€{comp["price"]:,.0f}</td>'
+                        f'<td style="padding:10px 12px; text-align:right; color:#475569;">{comp["surface"]:.0f} m²</td>'
+                        f'<td style="padding:10px 12px; text-align:right; color:{diff_color}; font-weight:600;">{"+" if diff >= 0 else "-"}€{abs(diff):,.0f}</td>'
+                        f'</tr>'
                     )
-            except Exception:
-                st.warning("Could not load investment insight.")
+                comp_html = (
+                    '<div style="background-color:#ffffff; border-radius:10px; border: 1px solid #E2E8F0; overflow:hidden;">'
+                    '<table style="width:100%; border-collapse:collapse; font-size:0.9em;">'
+                    '<thead style="background-color: #F1F5F9;"><tr>'
+                    '<th style="padding:10px 12px; text-align:left; color:#475569;">Type</th>'
+                    '<th style="padding:10px 12px; text-align:right; color:#475569;">Price</th>'
+                    '<th style="padding:10px 12px; text-align:right; color:#475569;">Area</th>'
+                    '<th style="padding:10px 12px; text-align:right; color:#475569;">Variance</th>'
+                    '</tr></thead>'
+                    f'<tbody>{rows_html}</tbody></table></div>'
+                )
+                st.markdown(comp_html, unsafe_allow_html=True)
+            else:
+                st.info("No comparable properties found.")
 
-            st.balloons()
-
-    except requests.exceptions.ConnectionError:
-        st.error("Could not connect to the API. Make sure the FastAPI server is running.")
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-
-
-st.divider()
-st.caption("Developed for MLOps Course DSBA")
+        # ==========================================================
+        # NAVIGATION BUTTONS
+        # ==========================================================
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        nav_col1, empty_col, nav_col2 = st.columns([1, 1.5, 1])
+        
+        with nav_col1:
+            if current > 1:
+                st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
+                if st.button("← Previous", use_container_width=True):
+                    st.session_state.current_page -= 1
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+        with nav_col2:
+            if current < 3:
+                if st.button("Next Detail →", use_container_width=True):
+                    st.session_state.current_page += 1
+                    st.rerun()
+            elif current == 3:
+                st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
+                if st.button("Start New Estimate", use_container_width=True):
+                    st.session_state.report_data = None
+                    st.session_state.current_page = 1
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)

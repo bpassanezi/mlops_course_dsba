@@ -1,0 +1,19 @@
+[theme]
+# A soft, warm off-black for buttons and focus states
+primaryColor = "#2A2927"
+
+# A warm, paper-like ivory/alabaster background
+backgroundColor = "#FDFCFB"
+
+# A very subtle beige for input boxes and the sidebar
+secondaryBackgroundColor = "#F4F2EE"
+
+# Deep charcoal text (easier on the eyes than pure black)
+textColor = "#111111"
+
+# We will let Streamlit use the system default sans-serif for UI elements
+font = "sans serif"
+
+[server]
+# hide the deploy button and menu natively
+# enableCORS = false
