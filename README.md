@@ -152,7 +152,11 @@ pytest tests/
 ├── models/                        # Versioned model (.joblib) & contract (.json)
 ├── src/
 │   ├── api/
-│   │   └── main.py                # FastAPI app with all endpoints
+│   │   ├── main.py                # FastAPI app main file
+│   │   └── services.py            # FastAPI services/functions
+│   │   └── routes.py              # FastAPI app with all routes (endpoints)
+│   │   └── schemas.py              # FastAPI app with schemas for the endpoints
+│   │   └── constants.py              # File with constant values used in API
 │   ├── model/
 │   │   ├── data_cleaning.py       # Merge & clean raw DVF CSVs
 │   │   ├── train.py               # Train XGBoost pipeline, export artifacts
