@@ -16,4 +16,4 @@ ENV PYTHONPATH="/app/src"
 
 # Run the API
 # FastAPI will automatically find the app in src/api/main.py
-CMD ["fastapi", "run", "src/api/main.py", "--port", "80"]
+CMD ["fastapi", "run", "src/api/main.py", "--port", "8000"]
