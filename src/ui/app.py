@@ -192,7 +192,7 @@ st.markdown("""
             <path d="M8 12L12 8L16 12" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M12 16V8" stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        RealEstate<span>AI</span>
+        Immo<span>Price</span>
     </div>
     <div class="nav-links">
         <div style="color: #111111; border-bottom: 1px solid #111111; padding-bottom: 2px;">Valuation</div>
