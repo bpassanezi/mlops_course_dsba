@@ -210,7 +210,7 @@ if dept_data is None:
 departments = dept_data["departments"]
 dept_centers = dept_data["centers"]
 dept_zooms = dept_data["zoom_levels"]
-dept_options = {code: f"{code} — {name}" for code, name in departments.items()}
+dept_options = {code: f"{code} - {name}" for code, name in departments.items()}
 
 # Layout
 main_col1, main_col2 = st.columns([1, 1.4], gap="large")
@@ -472,7 +472,7 @@ with main_col2:
             st.markdown("<br><h4 style='color: #1E293B; font-weight: 600;'>Recent Comparables</h4>", unsafe_allow_html=True)
             st.markdown('<p style="color:#64748B; font-size:0.85em; margin-top:0; line-height:1.5;">'
                 'These are 5 recently sold properties in the same area that are most similar to yours in size and number of rooms. '
-                'The <b>Variance</b> column shows the price difference compared to your estimate — '
+                'The <b>Variance</b> column shows the price difference compared to your estimate - '
                 'positive means the comparable sold for more, negative means it sold for less.</p>', unsafe_allow_html=True)
             comparables = data["comp_data"]
             if comparables:
