@@ -317,6 +317,11 @@ with main_col2:
                 <div class="prediction-value">€{prediction:,.0f}</div>
                 <p style="margin:0; color:#64748B; font-size:0.9em;">Based on real-time market artifacts</p>
             </div>
+            <p style="color:#64748B; font-size:0.85em; margin-top:12px; line-height:1.5;">
+                This is the estimated selling price of the property. It is calculated by analyzing thousands of
+                real property sales across France and considering the size, number of rooms, location, and
+                whether it is a flat or a house.
+            </p>
             """, unsafe_allow_html=True)
             
             breakdown = data["score_data"].get("breakdown", {})
@@ -331,6 +336,10 @@ with main_col2:
                 ptype_c = breakdown.get("property_type_adjustment", 0)
 
                 st.markdown("<br><h4 style='color: #1E293B; font-weight: 600;'>Valuation Breakdown</h4>", unsafe_allow_html=True)
+                st.markdown('<p style="color:#64748B; font-size:0.85em; margin-top:0; line-height:1.5;">'
+                    'This table breaks down what drives the estimated price. Starting from a baseline value, each '
+                    'line shows how much the size, location, number of rooms, and property type add to or subtract from '
+                    'the final price. Green values push the price up; red values pull it down.</p>', unsafe_allow_html=True)
                 st.markdown(
                     f"""
                     <div style="background-color:#ffffff; border-radius:10px; padding:24px; border: 1px solid #E2E8F0;
@@ -384,6 +393,10 @@ with main_col2:
                 neighborhood_score = 5.0
 
             st.markdown("<h4 style='color: #1E293B; font-weight: 600;'>Market Context</h4>", unsafe_allow_html=True)
+            st.markdown('<p style="color:#64748B; font-size:0.85em; margin-top:0; line-height:1.5;">'
+                'These figures show the typical price per square meter in the selected area, based on '
+                'recent real sales. Use them to see how your property\'s estimate compares to the '
+                'local market average.</p>', unsafe_allow_html=True)
             colA, colB = st.columns(2)
             with colA: st.markdown(f'<div class="stat-card"><div class="stat-value">€{avg_pm2:,.0f}</div><div class="stat-label">Avg. Price / m²</div></div>', unsafe_allow_html=True)
             with colB: st.markdown(f'<div class="stat-card"><div class="stat-value">€{median_pm2:,.0f}</div><div class="stat-label">Median Price / m²</div></div>', unsafe_allow_html=True)
@@ -402,6 +415,11 @@ with main_col2:
                 <div style="text-align:right; margin-top:10px; color:{score_color}; font-weight:600;">{score_label}</div>
                 <div class="stat-label" style="margin-top:2px;">Analyzed {tx_count:,} local transactions</div>
             </div>
+            <p style="color:#64748B; font-size:0.85em; margin-top:8px; line-height:1.5;">
+                The Desirability Index scores the property's area from 1 to 10 based on how local prices
+                compare to the department average. A high score (7+) means the neighborhood is sought-after
+                and commands higher prices, while a low score (below 4) suggests a more affordable area.
+            </p>
             """, unsafe_allow_html=True)
 
             map_center = dept_centers.get(selected_dept, [46.6, 2.5])
@@ -416,6 +434,12 @@ with main_col2:
         # ==========================================================
         elif current == 3:
             st.markdown("<h4 style='color: #1E293B; font-weight: 600;'>Investment Analytics</h4>", unsafe_allow_html=True)
+            st.markdown('<p style="color:#64748B; font-size:0.85em; margin-top:0; line-height:1.5;">'
+                'Key figures to help you assess this property as an investment. '
+                '<b>Est. Gross Yield</b> is the approximate annual rental income you could expect, shown as a percentage of the property price. '
+                '<b>YoY Capital Growth</b> shows whether property prices in this area have been rising or falling over the past year. '
+                'The <b>Asset Score</b> (0–10) is an overall investment rating that combines rental income potential, '
+                'price trends, and affordability in the area.</p>', unsafe_allow_html=True)
             
             inv = data["inv_data"]
             if inv:
@@ -446,6 +470,10 @@ with main_col2:
                 st.info("Investment data not available for this configuration.")
 
             st.markdown("<br><h4 style='color: #1E293B; font-weight: 600;'>Recent Comparables</h4>", unsafe_allow_html=True)
+            st.markdown('<p style="color:#64748B; font-size:0.85em; margin-top:0; line-height:1.5;">'
+                'These are 5 recently sold properties in the same area that are most similar to yours in size and number of rooms. '
+                'The <b>Variance</b> column shows the price difference compared to your estimate — '
+                'positive means the comparable sold for more, negative means it sold for less.</p>', unsafe_allow_html=True)
             comparables = data["comp_data"]
             if comparables:
                 rows_html = ""
