@@ -198,6 +198,22 @@ st.markdown("""
         <div style="color: #111111; border-bottom: 1px solid #111111; padding-bottom: 2px;">Valuation</div>
     </div>
 </div>
+
+<div style="
+    background: linear-gradient(90deg, #1E293B 0%, #2A2927 100%);
+    color: #F8FAFC;
+    padding: 18px 2rem;
+    margin: 0rem -4rem 2rem -4rem;
+    text-align: center;
+    border-bottom: 1px solid #0F172A;
+">
+    <p style="margin:0; font-size:1.15em; font-family:'Merriweather', serif; font-style:italic; letter-spacing:0.01em;">
+        Know what a property is truly worth — before you make your move.
+    </p>
+    <p style="margin:6px 0 0; font-size:0.82em; color:#94A3B8; font-family:'Inter', sans-serif; letter-spacing:0.04em; text-transform:uppercase;">
+        Data-driven valuations · Real market comparisons · Investment intelligence
+    </p>
+</div>
 """, unsafe_allow_html=True)
 # ---------------------------------------------------------------------------
 # Data Loading & Layout
@@ -416,10 +432,41 @@ with main_col2:
                 <div class="stat-label" style="margin-top:2px;">Analyzed {tx_count:,} local transactions</div>
             </div>
             <p style="color:#64748B; font-size:0.85em; margin-top:8px; line-height:1.5;">
-                The Desirability Index scores the property's area from 1 to 10 based on how local prices
-                compare to the department average. A high score (7+) means the neighborhood is sought-after
+                The Desirability Index scores the property&#39;s area from 1 to 10 based on how local prices
+                compare to the department average. A high score (7+) means the neighbourhood is sought-after
                 and commands higher prices, while a low score (below 4) suggests a more affordable area.
             </p>
+            <table style="width:100%; border-collapse:collapse; font-size:0.82em; margin-top:4px;">
+                <thead>
+                    <tr style="background:#F1F5F9;">
+                        <th style="padding:7px 10px; text-align:left; color:#475569; font-weight:600; border-radius:4px 0 0 4px;">Score</th>
+                        <th style="padding:7px 10px; text-align:left; color:#475569; font-weight:600;">Label</th>
+                        <th style="padding:7px 10px; text-align:left; color:#475569; font-weight:600; border-radius:0 4px 4px 0;">What it means</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #F1F5F9;">
+                        <td style="padding:7px 10px; color:#0F172A; font-weight:600;">8 – 10</td>
+                        <td style="padding:7px 10px; color:#10B981; font-weight:600;">Premium Area</td>
+                        <td style="padding:7px 10px; color:#64748B;">Consistently high demand; prices well above the departmental norm</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #F1F5F9; background:#FAFAFA;">
+                        <td style="padding:7px 10px; color:#0F172A; font-weight:600;">6 – 7</td>
+                        <td style="padding:7px 10px; color:#10B981; font-weight:600;">Desirable</td>
+                        <td style="padding:7px 10px; color:#64748B;">Above-average neighbourhood with strong market activity</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #F1F5F9;">
+                        <td style="padding:7px 10px; color:#0F172A; font-weight:600;">4 – 5</td>
+                        <td style="padding:7px 10px; color:#F59E0B; font-weight:600;">Standard</td>
+                        <td style="padding:7px 10px; color:#64748B;">In line with the typical market; solid but undifferentiated</td>
+                    </tr>
+                    <tr style="background:#FAFAFA;">
+                        <td style="padding:7px 10px; color:#0F172A; font-weight:600;">1 – 3</td>
+                        <td style="padding:7px 10px; color:#EF4444; font-weight:600;">Below Market</td>
+                        <td style="padding:7px 10px; color:#64748B;">Prices sit below the area average; may signal lower demand or a buying opportunity</td>
+                    </tr>
+                </tbody>
+            </table>
             """, unsafe_allow_html=True)
 
             map_center = dept_centers.get(selected_dept, [46.6, 2.5])
