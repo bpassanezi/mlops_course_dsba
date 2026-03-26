@@ -2,9 +2,7 @@
 
 ![home_screen](./images/home_screen.png)
 
-> **Goal**: Estimates property values, benchmark against the market, and assess investment potential.
-
-ImmoPrice is a production-ready REST API and UI to help you evaluate the opportunities and price of real estate. It combines an XGBoost predictive model with real-market statistics derived from the DVF (Demandes de Valeurs Foncières) open dataset to deliver actionable insights.
+> ImmoPrice is a production-ready REST API and UI to help you evaluate the opportunities and price of real estate. It combines an XGBoost predictive model with real-market statistics derived from the DVF (Demandes de Valeurs Foncières) open dataset to deliver actionable insights.
 ---
 
 ## Why ImmoPrice?
@@ -51,7 +49,7 @@ The model was trained on tens of thousands of real property transactions from fi
 
 **How the breakdown is calculated:**
 
-The breakdown uses XGBoost's built-in **prediction contributions** (`pred_contribs`). For each input, the model decomposes the prediction into the sum of contributions from each feature. The breakdown returned by the API groups these into five intuitive components:
+The breakdown uses XGBoost's built-in **prediction contributions** (`pred_contribs`). For each input, the model decomposes the prediction into the sum of contributions from each feature. The breakdown groups these into five intuitive components:
 
 | Key | What it represents |
 |---|---|
@@ -146,15 +144,6 @@ The **gross annual rental yield** is expressed as a percentage of the property v
 | `59` | Lille | 5.8% |
 
 > Higher yields in cities like Lille and Marseille reflect a lower purchase price relative to achievable rents. Paris's lower yield reflects its elevated property prices despite strong rental demand.
-
-#### Monthly Rent (`monthly_rent`)
-Estimated monthly income from renting the property, derived from the annual yield:
-
-```
-monthly_rent = (predicted_price × rental_yield%) / 12
-```
-
-> **Business use:** Gives an investor an immediate sense of expected cash flow from the property.
 
 #### Market Growth (`market_growth`)
 
