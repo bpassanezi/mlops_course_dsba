@@ -122,7 +122,7 @@ def categorical_summary(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def target_variable_analysis(df: pd.DataFrame) -> dict:
-    """Analyze valeur_fonciere (property value) — the likely target variable."""
+    """Analyze valeur_fonciere (property value) - the likely target variable."""
     col = "valeur_fonciere"
     if col not in df.columns:
         return {}
@@ -236,7 +236,7 @@ def run_eda(filename: str) -> None:
     """Run full EDA for a single dataset and print results."""
     name = filename.replace("_dataset.csv", "").replace("_", " ").title()
     print("=" * 80)
-    print(f"  EDA — {name}")
+    print(f"  EDA - {name}")
     print("=" * 80)
 
     df = load_dataset(filename)
