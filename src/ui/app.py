@@ -6,6 +6,10 @@ import folium
 from streamlit_folium import st_folium
 import math
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Set page config for a premium feel
 st.set_page_config(
     page_title="ImmoPrice",

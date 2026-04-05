@@ -29,11 +29,13 @@ def _load_dept_stats() -> dict:
         logger.warning("cleaned_dataset.csv not found at '%s' — department stats will be empty.", cleaned_path)
         return {}
     try:
-        df = pd.read_csv(cleaned_path, low_memory=False)
+        df = pd.read_csv(cleaned_path, low_memory=False, dtype={"code_departement": str})
     except Exception as e:
         logger.error("Failed to read cleaned_dataset.csv: %s", e)
         return {}
-    df["code_departement"] = df["code_departement"].astype(str).str.strip()
+    
+    # Strip any decimal points if pandas still cast it to float string "75.0"
+    df["code_departement"] = df["code_departement"].astype(str).str.replace(".0", "", regex=False).str.strip()
     df = df[(df["surface_reelle_bati"] > 0) & (df["valeur_fonciere"] > 0)]
     df["price_per_m2"] = df["valeur_fonciere"] / df["surface_reelle_bati"]
 
@@ -97,11 +99,11 @@ def _load_cleaned_df() -> pd.DataFrame:
         logger.warning("cleaned_dataset.csv not found — comparables will be unavailable.")
         return pd.DataFrame()
     try:
-        df = pd.read_csv(cleaned_path, low_memory=False)
+        df = pd.read_csv(cleaned_path, low_memory=False, dtype={"code_departement": str})
     except Exception as e:
         logger.error("Failed to read cleaned_dataset.csv for comparables: %s", e)
         return pd.DataFrame()
-    df["code_departement"] = df["code_departement"].astype(str).str.strip()
+    df["code_departement"] = df["code_departement"].astype(str).str.replace(".0", "", regex=False).str.strip()
     df = df[(df["surface_reelle_bati"] > 0) & (df["valeur_fonciere"] > 0)]
     df["price_per_m2"] = (df["valeur_fonciere"] / df["surface_reelle_bati"]).round(2)
     return df
@@ -113,7 +115,7 @@ def _compute_market_growth() -> dict:
     for dept, filename in RAW_DATASETS.items():
         path = os.path.join(DATA_DIR, filename)
         if not os.path.exists(path):
-            logger.warning("Raw dataset '%s' not found — market growth unavailable for department %s.", filename, dept)
+            print(f"  [Market Growth] Missing file for dept {dept}: {path}")
             continue
         try:
             df = pd.read_csv(
@@ -122,21 +124,30 @@ def _compute_market_growth() -> dict:
                 dtype=str,
             )
         except Exception as e:
-            logger.error("Failed to read '%s' for market growth: %s", filename, e)
+            print(f"  [Market Growth] File read error dept {dept}: {e}")
             continue
-        df["date_mutation"] = pd.to_datetime(df["date_mutation"], errors="coerce")
+
+        df["date_mutation"] = pd.to_datetime(df["date_mutation"], format="%Y-%m-%d", errors="coerce")
+        if df["date_mutation"].isna().all():
+            print(f"  [Market Growth] WARNING: dept {dept} 'date_mutation' could not be parsed as YYYY-MM-DD. Falling back to dayfirst=True inference...")
+            df["date_mutation"] = pd.to_datetime(df["date_mutation"], dayfirst=True, errors="coerce")
+            
         df["valeur_fonciere"] = pd.to_numeric(df["valeur_fonciere"], errors="coerce")
         df["surface_reelle_bati"] = pd.to_numeric(df["surface_reelle_bati"], errors="coerce")
         df = df[(df["surface_reelle_bati"] > 0) & (df["valeur_fonciere"] > 0)].dropna(subset=["date_mutation"])
         df["year"] = df["date_mutation"].dt.year
         df["ppm2"] = df["valeur_fonciere"] / df["surface_reelle_bati"]
         yearly = df.groupby("year")["ppm2"].median()
+        
+        print(f"  [Market Growth] Dept {dept} final yearly stats: \n{yearly}")
         if len(yearly) >= 2:
             last2 = yearly.iloc[-2:]
             pct = (last2.iloc[-1] - last2.iloc[-2]) / last2.iloc[-2] * 100
             growth[dept] = round(float(pct), 1)
         else:
             growth[dept] = 0.0
+            
+    print(f"  [Market Growth] Final generated dictionary: {growth}")
     return growth
 
 
@@ -145,7 +156,6 @@ def initialize() -> None:
 
     Must be called before any service function that reads these globals.
     Designed to be invoked from the FastAPI lifespan hook in main.py —
-    NOT triggered automatically on import.
     """
     global DEPT_STATS, COMMUNE_DATA, COMMUNE_COORDS, CLEANED_DF, MARKET_GROWTH
 
@@ -153,8 +163,9 @@ def initialize() -> None:
         from huggingface_hub import download_bucket_files
         
         logger.info("Syncing datasets from Hugging Face Bucket...")
+
         files_to_sync = [
-            ("cleaned_dataset.csv", os.path.join(DATA_DIR, "cleaned_dataset.csv"))
+            ("data/cleaned_dataset.csv", os.path.join(DATA_DIR, "cleaned_dataset.csv"))
         ]
         for dept, filename in RAW_DATASETS.items():
             files_to_sync.append((filename, os.path.join(DATA_DIR, filename)))
@@ -166,25 +177,32 @@ def initialize() -> None:
                 missing_files.append((remote_path, local_path))
                 
         if missing_files:
+            print(f"Downloading {len(missing_files)} files from bucket...")
             download_bucket_files(
                 "b00827-pass/mlops_course",
                 files=missing_files
             )
-            logger.info(f"Downloaded {len(missing_files)} files from bucket.")
+            print(f"Downloaded {len(missing_files)} files from bucket.")
         else:
-            logger.info("All data files already present locally.")
+            print("All data files already present locally.")
 
-        logger.info("Loading department statistics...")
+        print(f"DEBUG: Contents of {DATA_DIR} inside Docker container: {os.listdir(DATA_DIR)}")
+
+        print("Loading department statistics...")
         DEPT_STATS = _load_dept_stats()
-        logger.info("Loading commune data...")
+        print("Loading commune data...")
         COMMUNE_DATA, COMMUNE_COORDS = _load_commune_and_coords()
-        logger.info("Loading cleaned dataset...")
+        print("Loading cleaned dataset...")
         CLEANED_DF = _load_cleaned_df()
-        logger.info("Data loading complete.")
+        print("Data loading complete.")
 
-        logger.info("Computing market growth...")
+        print(CLEANED_DF)
+        print(COMMUNE_DATA)
+
+        print("Computing market growth...")
         MARKET_GROWTH = _compute_market_growth()
-        logger.info("Market growth computed.")
+        print("Market growth computed.")
     except Exception as e:
+        print(f"Critical error during data loading: {e}")
         logger.error("Critical error during data loading: %s", e, exc_info=True)
-        logger.info(f"WARNING: Data loading failed ({e}). The API will start with empty data.")
+        print(f"WARNING: Data loading failed ({e}). The API will start with empty data.")

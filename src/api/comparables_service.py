@@ -5,7 +5,7 @@ Comparable property search: finds the N most similar real transactions
 in the same department using normalised Euclidean distance on surface and rooms.
 """
 
-from api.market_data import CLEANED_DF
+from api import market_data
 
 
 def find_comparables(
@@ -31,10 +31,10 @@ def find_comparables(
         List of dicts with keys: price, surface, rooms, type, price_per_m2.
         Empty list if no data is available.
     """
-    if CLEANED_DF.empty:
+    if market_data.CLEANED_DF.empty:
         return []
 
-    sub = CLEANED_DF[CLEANED_DF["code_departement"] == dept].copy()
+    sub = market_data.CLEANED_DF[market_data.CLEANED_DF["code_departement"] == dept].copy()
 
     same_type = sub[sub["type_local"] == type_local]
     if len(same_type) >= n:
