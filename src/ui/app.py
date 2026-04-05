@@ -33,8 +33,9 @@ def fetch_departments(api_url):
         r = requests.get(f"{api_url}/departments/", timeout=5)
         r.raise_for_status()
         return r.json()
-    except Exception:
-        return None
+    except Exception as e:
+        logger.error(f"Failed to fetch departments: {e}")
+        return None 
 
 @st.cache_data(ttl=600)
 def fetch_communes(api_url, dept_code):
@@ -42,7 +43,8 @@ def fetch_communes(api_url, dept_code):
         r = requests.get(f"{api_url}/communes/{dept_code}", timeout=5)
         r.raise_for_status()
         return r.json()
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to fetch communes. Returning empty list: {e}")
         return {"communes": [], "zipcodes": []}
 
 @st.cache_data(ttl=600)
@@ -52,6 +54,7 @@ def fetch_commune_coords(api_url, dept_code, commune_name):
         r.raise_for_status()
         return r.json().get("coords")
     except Exception:
+        logger.error(f"Failed to fetch communes coordinates. Returning empty list: {e}")
         return None
 
 DEPT_MAIN_CITY_COORDS = {
@@ -286,8 +289,8 @@ with main_col1:
                     }, timeout=15)
                     if inv_r.ok:
                         inv_resp = inv_r.json()
-                except Exception:
-                    pass
+                except Exception as e:
+                    st.error(f"Failed to fetch investment data. {e}")
                 
                 # Save ALL data to session state
                 st.session_state.report_data = {

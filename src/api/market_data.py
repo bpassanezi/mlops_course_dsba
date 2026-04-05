@@ -129,20 +129,20 @@ def _compute_market_growth() -> dict:
 
 
 try:
-    print("Loading department statistics...")
+    logger.info("Loading department statistics...")
     DEPT_STATS = _load_dept_stats()
-    print("Loading commune data...")
+    logger.info("Loading commune data...")
     COMMUNE_DATA, COMMUNE_COORDS = _load_commune_and_coords()
-    print("Loading cleaned dataset...")
+    logger.info("Loading cleaned dataset...")
     CLEANED_DF = _load_cleaned_df()
-    print("Data loading complete.")
+    logger.info("Data loading complete.")
 
-    print("Computing market growth...")
+    logger.info("Computing market growth...")
     MARKET_GROWTH = _compute_market_growth()
-    print("Market growth computed.")
+    logger.info("Market growth computed.")
 except Exception as e:
     logger.error("Critical error during data loading: %s", e, exc_info=True)
-    print(f"WARNING: Data loading failed ({e}). The API will start with empty data.")
+    logger.info(f"WARNING: Data loading failed ({e}). The API will start with empty data.")
     DEPT_STATS = DEPT_STATS if "DEPT_STATS" in dir() else {}
     COMMUNE_DATA = COMMUNE_DATA if "COMMUNE_DATA" in dir() else {}
     COMMUNE_COORDS = COMMUNE_COORDS if "COMMUNE_COORDS" in dir() else {}

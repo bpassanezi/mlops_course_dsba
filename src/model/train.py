@@ -1,3 +1,6 @@
+import logging
+
+
 import os
 import json
 import joblib
@@ -11,10 +14,10 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
 
-try:
-    from model.score import evaluate_model
-except ModuleNotFoundError:
-    from score import evaluate_model
+from model.score import evaluate_model
+
+logger = logging.getLogger(__name__)
+
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -151,12 +154,12 @@ def train_and_export(
     metrics = {**train_metrics, **test_metrics}
 
     # Print metrics
-    print("\n=== Training Metrics ===")
+    logger.info("\n=== Training Metrics ===")
     for k, v in train_metrics.items():
-        print(f"  {k}: {v}")
-    print("\n=== Test Metrics ===")
+        logger.info(f"  {k}: {v}")
+    logger.info("\n=== Test Metrics ===")
     for k, v in test_metrics.items():
-        print(f"  {k}: {v}")
+        logger.info(f"  {k}: {v}")
 
     # Save artifacts
     os.makedirs(ARTIFACT_DIR, exist_ok=True)
@@ -190,8 +193,8 @@ def train_and_export(
             f"Failed to save contract to '{contract_path}': {e}"
         ) from e
 
-    print(f"\nModel saved to  {model_path}")
-    print(f"Contract saved to {contract_path}")
+    logger.info(f"\nModel saved to  {model_path}")
+    logger.info(f"Contract saved to {contract_path}")
 
     return {
         "version": version,
@@ -205,8 +208,8 @@ if __name__ == "__main__":
     try:
         train_and_export()
     except (FileNotFoundError, ValueError, RuntimeError) as e:
-        print(f"ERROR: {e}")
+        logger.error(f"ERROR: {e}")
         exit(1)
     except Exception as e:
-        print(f"Unexpected error during training: {e}")
+        logger.error(f"Unexpected error during training: {e}")
         exit(1)
