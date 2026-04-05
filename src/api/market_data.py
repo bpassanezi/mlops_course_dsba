@@ -9,15 +9,18 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-# ---------------------------------------------------------------------------
-# Module-level globals — empty until initialize() is called.
-# Nothing runs on import.
-# ---------------------------------------------------------------------------
-DEPT_STATS: dict = {}
-COMMUNE_DATA: dict = {}
-COMMUNE_COORDS: dict = {}
-CLEANED_DF: pd.DataFrame = pd.DataFrame()
-MARKET_GROWTH: dict = {}
+class MarketDataState:
+    """Holds the globally loaded market datasets in memory for active API use."""
+    def __init__(self):
+        self.dept_stats: dict = {}
+        self.commune_data: dict = {}
+        self.commune_coords: dict = {}
+        self.cleaned_df: pd.DataFrame = pd.DataFrame()
+        self.market_growth: dict = {}
+
+# A single instance used across the FastAPI app
+market_state = MarketDataState()
+
 
 
 
@@ -115,7 +118,7 @@ def _compute_market_growth() -> dict:
     for dept, filename in RAW_DATASETS.items():
         path = os.path.join(DATA_DIR, filename)
         if not os.path.exists(path):
-            print(f"  [Market Growth] Missing file for dept {dept}: {path}")
+            logger.warning("Raw dataset '%s' not found — market growth unavailable for department %s.", filename, dept)
             continue
         try:
             df = pd.read_csv(
@@ -124,12 +127,12 @@ def _compute_market_growth() -> dict:
                 dtype=str,
             )
         except Exception as e:
-            print(f"  [Market Growth] File read error dept {dept}: {e}")
+            logger.error("Failed to read '%s' for market growth: %s", filename, e)
             continue
 
         df["date_mutation"] = pd.to_datetime(df["date_mutation"], format="%Y-%m-%d", errors="coerce")
         if df["date_mutation"].isna().all():
-            print(f"  [Market Growth] WARNING: dept {dept} 'date_mutation' could not be parsed as YYYY-MM-DD. Falling back to dayfirst=True inference...")
+            logger.warning("dept %s 'date_mutation' could not be parsed as YYYY-MM-DD. Falling back to dayfirst=True inference...", dept)
             df["date_mutation"] = pd.to_datetime(df["date_mutation"], dayfirst=True, errors="coerce")
             
         df["valeur_fonciere"] = pd.to_numeric(df["valeur_fonciere"], errors="coerce")
@@ -139,7 +142,7 @@ def _compute_market_growth() -> dict:
         df["ppm2"] = df["valeur_fonciere"] / df["surface_reelle_bati"]
         yearly = df.groupby("year")["ppm2"].median()
         
-        print(f"  [Market Growth] Dept {dept} final yearly stats: \n{yearly}")
+        # Removed debug yearly logging
         if len(yearly) >= 2:
             last2 = yearly.iloc[-2:]
             pct = (last2.iloc[-1] - last2.iloc[-2]) / last2.iloc[-2] * 100
@@ -147,18 +150,15 @@ def _compute_market_growth() -> dict:
         else:
             growth[dept] = 0.0
             
-    print(f"  [Market Growth] Final generated dictionary: {growth}")
+    logger.info("Market Growth dictionary generated: %s", growth)
     return growth
 
 
 def initialize() -> None:
-    """Load all market data into module-level globals.
+    """Load all market data into the market_state singleton.
 
-    Must be called before any service function that reads these globals.
-    Designed to be invoked from the FastAPI lifespan hook in main.py —
+    Designed to be invoked from the FastAPI lifespan hook in main.py.
     """
-    global DEPT_STATS, COMMUNE_DATA, COMMUNE_COORDS, CLEANED_DF, MARKET_GROWTH
-
     try:
         from huggingface_hub import download_bucket_files
         
@@ -177,32 +177,27 @@ def initialize() -> None:
                 missing_files.append((remote_path, local_path))
                 
         if missing_files:
-            print(f"Downloading {len(missing_files)} files from bucket...")
+            logger.info("Downloading %d files from bucket...", len(missing_files))
             download_bucket_files(
                 "b00827-pass/mlops_course",
                 files=missing_files
             )
-            print(f"Downloaded {len(missing_files)} files from bucket.")
+            logger.info("Downloaded %d files from bucket.", len(missing_files))
         else:
-            print("All data files already present locally.")
+            logger.info("All data files already present locally.")
 
-        print(f"DEBUG: Contents of {DATA_DIR} inside Docker container: {os.listdir(DATA_DIR)}")
+        # Directory debug removed
 
-        print("Loading department statistics...")
-        DEPT_STATS = _load_dept_stats()
-        print("Loading commune data...")
-        COMMUNE_DATA, COMMUNE_COORDS = _load_commune_and_coords()
-        print("Loading cleaned dataset...")
-        CLEANED_DF = _load_cleaned_df()
-        print("Data loading complete.")
+        logger.info("Loading department statistics...")
+        market_state.dept_stats = _load_dept_stats()
+        logger.info("Loading commune data...")
+        market_state.commune_data, market_state.commune_coords = _load_commune_and_coords()
+        logger.info("Loading cleaned dataset...")
+        market_state.cleaned_df = _load_cleaned_df()
+        logger.info("Data loading complete.")
 
-        print(CLEANED_DF)
-        print(COMMUNE_DATA)
-
-        print("Computing market growth...")
-        MARKET_GROWTH = _compute_market_growth()
-        print("Market growth computed.")
+        logger.info("Computing market growth...")
+        market_state.market_growth = _compute_market_growth()
+        logger.info("Market growth computed.")
     except Exception as e:
-        print(f"Critical error during data loading: {e}")
-        logger.error("Critical error during data loading: %s", e, exc_info=True)
-        print(f"WARNING: Data loading failed ({e}). The API will start with empty data.")
+        logger.info("WARNING: Data loading failed (%s). The API will start with empty data.", e)

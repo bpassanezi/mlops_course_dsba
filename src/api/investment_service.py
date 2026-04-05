@@ -34,7 +34,7 @@ def compute_investment_metrics(
         ValueError: If the department average price/m² is unavailable.
     """
     rental_yield  = RENTAL_YIELDS[dept]   # KeyError propagated to route → HTTP 503
-    market_growth = market_data.MARKET_GROWTH[dept]   # KeyError propagated to route → HTTP 503
+    market_growth = market_data.market_state.market_growth[dept]   # KeyError propagated to route → HTTP 503
 
     monthly_rent = prediction * (rental_yield / 100) / 12
 
@@ -42,7 +42,7 @@ def compute_investment_metrics(
     yield_score  = min(10, max(0, (rental_yield - 1) / 0.7))   # 1%→0, 8%→10
     growth_score = min(10, max(0, (market_growth + 5) / 1.5))  # -5%→0, +10%→10
 
-    dept_avg = market_data.DEPT_STATS.get(dept, {}).get("avg_price_per_m2")
+    dept_avg = market_data.market_state.dept_stats.get(dept, {}).get("avg_price_per_m2")
     if not dept_avg or dept_avg <= 0:
         raise ValueError(f"Average price/m² unavailable for department '{dept}'.")
 
