@@ -42,6 +42,11 @@ def preprocess_data(df) -> pd.DataFrame(): # type: ignore
     df["code_departement"] = df["code_departement"].astype(str)
 
     # Feature engineering
+    if (df["nombre_pieces_principales"] == 0).any():
+        raise ValueError(
+            "nombre_pieces_principales contains zero values — cannot compute surface_per_room. "
+            "Filter these rows before preprocessing."
+        )
     df["surface_per_room"] = df["surface_reelle_bati"] / df["nombre_pieces_principales"]
     df["log_surface"] = np.log1p(df["surface_reelle_bati"])
 
@@ -51,8 +56,23 @@ def load_cleaned_data() -> pd.DataFrame:
     """Load the cleaned dataset and filter unrealistic prices."""
     path = os.path.join(DATA_DIR, "cleaned_dataset.csv")
 
-    df = pd.read_csv(path)
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Cleaned dataset not found at '{path}'. "
+            "Run 'python -m src.model.data_cleaning' first."
+        )
+
+    try:
+        df = pd.read_csv(path)
+    except Exception as e:
+        raise RuntimeError(f"Failed to read '{path}': {e}") from e
+
     df = df[df[TARGET] >= MIN_PRICE].reset_index(drop=True)
+    if df.empty:
+        raise ValueError(
+            f"No rows remaining after filtering prices >= {MIN_PRICE}. "
+            "Check that the cleaned dataset contains valid data."
+        )
 
     df = preprocess_data(df)
 
@@ -143,7 +163,12 @@ def train_and_export(
     version = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
 
     model_path = os.path.join(ARTIFACT_DIR, f"model_{version}.joblib")
-    joblib.dump(model, model_path)
+    try:
+        joblib.dump(model, model_path)
+    except OSError as e:
+        raise RuntimeError(
+            f"Failed to save model to '{model_path}': {e}"
+        ) from e
 
     contract = {
         "version": version,
@@ -157,8 +182,13 @@ def train_and_export(
         "metrics": metrics,
     }
     contract_path = os.path.join(ARTIFACT_DIR, f"contract_{version}.json")
-    with open(contract_path, "w") as f:
-        json.dump(contract, f, indent=2)
+    try:
+        with open(contract_path, "w") as f:
+            json.dump(contract, f, indent=2)
+    except OSError as e:
+        raise RuntimeError(
+            f"Failed to save contract to '{contract_path}': {e}"
+        ) from e
 
     print(f"\nModel saved to  {model_path}")
     print(f"Contract saved to {contract_path}")
@@ -172,4 +202,11 @@ def train_and_export(
 
 
 if __name__ == "__main__":
-    train_and_export()
+    try:
+        train_and_export()
+    except (FileNotFoundError, ValueError, RuntimeError) as e:
+        print(f"ERROR: {e}")
+        exit(1)
+    except Exception as e:
+        print(f"Unexpected error during training: {e}")
+        exit(1)

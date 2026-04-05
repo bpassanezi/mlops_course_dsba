@@ -1,7 +1,10 @@
 import os
+import logging
 import warnings
 import pandas as pd
 from api.constants import AVAILABLE_DEPARTMENTS, RAW_DATASETS
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -11,8 +14,13 @@ def _load_dept_stats() -> dict:
     """Compute average price/m² per department from cleaned dataset."""
     cleaned_path = os.path.join(DATA_DIR, "cleaned_dataset.csv")
     if not os.path.exists(cleaned_path):
+        logger.warning("cleaned_dataset.csv not found at '%s' — department stats will be empty.", cleaned_path)
         return {}
-    df = pd.read_csv(cleaned_path, low_memory=False)
+    try:
+        df = pd.read_csv(cleaned_path, low_memory=False)
+    except Exception as e:
+        logger.error("Failed to read cleaned_dataset.csv: %s", e)
+        return {}
     df["code_departement"] = df["code_departement"].astype(str).str.strip()
     df = df[(df["surface_reelle_bati"] > 0) & (df["valeur_fonciere"] > 0)]
     df["price_per_m2"] = df["valeur_fonciere"] / df["surface_reelle_bati"]
@@ -38,8 +46,13 @@ def _load_commune_and_coords() -> tuple:
     for dept, filename in RAW_DATASETS.items():
         path = os.path.join(DATA_DIR, filename)
         if not os.path.exists(path):
+            logger.warning("Raw dataset '%s' not found — skipping department %s.", filename, dept)
             continue
-        df = pd.read_csv(path, usecols=cols, dtype={"code_departement": str, "nom_commune": str, "code_postal": str})
+        try:
+            df = pd.read_csv(path, usecols=cols, dtype={"code_departement": str, "nom_commune": str, "code_postal": str})
+        except Exception as e:
+            logger.error("Failed to read '%s': %s — skipping department %s.", filename, e, dept)
+            continue
         df["code_departement"] = df["code_departement"].str.strip()
         sub = df[df["code_departement"] == dept]
 
@@ -69,8 +82,13 @@ def _load_cleaned_df() -> pd.DataFrame:
     """Load cleaned dataset for comparables queries."""
     cleaned_path = os.path.join(DATA_DIR, "cleaned_dataset.csv")
     if not os.path.exists(cleaned_path):
+        logger.warning("cleaned_dataset.csv not found — comparables will be unavailable.")
         return pd.DataFrame()
-    df = pd.read_csv(cleaned_path, low_memory=False)
+    try:
+        df = pd.read_csv(cleaned_path, low_memory=False)
+    except Exception as e:
+        logger.error("Failed to read cleaned_dataset.csv for comparables: %s", e)
+        return pd.DataFrame()
     df["code_departement"] = df["code_departement"].astype(str).str.strip()
     df = df[(df["surface_reelle_bati"] > 0) & (df["valeur_fonciere"] > 0)]
     df["price_per_m2"] = (df["valeur_fonciere"] / df["surface_reelle_bati"]).round(2)
@@ -83,12 +101,17 @@ def _compute_market_growth() -> dict:
     for dept, filename in RAW_DATASETS.items():
         path = os.path.join(DATA_DIR, filename)
         if not os.path.exists(path):
+            logger.warning("Raw dataset '%s' not found — market growth unavailable for department %s.", filename, dept)
             continue
-        df = pd.read_csv(
-            path,
-            usecols=["date_mutation", "valeur_fonciere", "surface_reelle_bati"],
-            dtype=str,
-        )
+        try:
+            df = pd.read_csv(
+                path,
+                usecols=["date_mutation", "valeur_fonciere", "surface_reelle_bati"],
+                dtype=str,
+            )
+        except Exception as e:
+            logger.error("Failed to read '%s' for market growth: %s", filename, e)
+            continue
         df["date_mutation"] = pd.to_datetime(df["date_mutation"], errors="coerce")
         df["valeur_fonciere"] = pd.to_numeric(df["valeur_fonciere"], errors="coerce")
         df["surface_reelle_bati"] = pd.to_numeric(df["surface_reelle_bati"], errors="coerce")
@@ -105,14 +128,23 @@ def _compute_market_growth() -> dict:
     return growth
 
 
-print("Loading department statistics...")
-DEPT_STATS = _load_dept_stats()
-print("Loading commune data...")
-COMMUNE_DATA, COMMUNE_COORDS = _load_commune_and_coords()
-print("Loading cleaned dataset...")
-CLEANED_DF = _load_cleaned_df()
-print("Data loading complete.")
+try:
+    print("Loading department statistics...")
+    DEPT_STATS = _load_dept_stats()
+    print("Loading commune data...")
+    COMMUNE_DATA, COMMUNE_COORDS = _load_commune_and_coords()
+    print("Loading cleaned dataset...")
+    CLEANED_DF = _load_cleaned_df()
+    print("Data loading complete.")
 
-print("Computing market growth...")
-MARKET_GROWTH = _compute_market_growth()
-print("Market growth computed.")
+    print("Computing market growth...")
+    MARKET_GROWTH = _compute_market_growth()
+    print("Market growth computed.")
+except Exception as e:
+    logger.error("Critical error during data loading: %s", e, exc_info=True)
+    print(f"WARNING: Data loading failed ({e}). The API will start with empty data.")
+    DEPT_STATS = DEPT_STATS if "DEPT_STATS" in dir() else {}
+    COMMUNE_DATA = COMMUNE_DATA if "COMMUNE_DATA" in dir() else {}
+    COMMUNE_COORDS = COMMUNE_COORDS if "COMMUNE_COORDS" in dir() else {}
+    CLEANED_DF = CLEANED_DF if "CLEANED_DF" in dir() else pd.DataFrame()
+    MARKET_GROWTH = MARKET_GROWTH if "MARKET_GROWTH" in dir() else {}
