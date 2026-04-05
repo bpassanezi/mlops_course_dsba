@@ -12,7 +12,7 @@ from api.schemas import (
     ComparablesResponse, 
     InvestmentResponse
 )
-from api.services import (
+from api.market_data import (
     DEPT_STATS, 
     COMMUNE_DATA, 
     COMMUNE_COORDS, 
