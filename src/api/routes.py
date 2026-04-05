@@ -162,8 +162,20 @@ async def get_investment(
     if surface_reelle_bati <= 0:
         raise HTTPException(status_code=400, detail="surface_reelle_bati must be > 0")
 
-    rental_yield = RENTAL_YIELDS.get(dept, 4.5)
-    market_growth = MARKET_GROWTH.get(dept, 0.0)
+    rental_yield = RENTAL_YIELDS.get(dept)
+    if rental_yield is None:
+        raise HTTPException(
+            status_code=500,
+            detail=f"No rental yield data configured for department '{dept}'.",
+        )
+
+    market_growth = MARKET_GROWTH.get(dept)
+    if market_growth is None:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Market growth data is unavailable for department '{dept}'. "
+                   "The raw dataset may be missing.",
+        )
 
     # Estimated monthly rent from yield
     monthly_rent = prediction * (rental_yield / 100) / 12
@@ -176,12 +188,16 @@ async def get_investment(
     growth_score = min(10, max(0, (market_growth + 5) / 1.5))  # -5%->0, 10%->10
 
     pred_pm2 = prediction / max(surface_reelle_bati, 1)
-    dept_avg = DEPT_STATS.get(dept, {}).get("avg_price_per_m2", pred_pm2)
-    if dept_avg > 0:
-        afford_ratio = pred_pm2 / dept_avg
-        afford_score = min(10, max(0, (2 - afford_ratio) * 10))  # ratio 0.5->15(cap 10), 1.0->10, 2.0->0
-    else:
-        afford_score = 5.0
+    dept_avg = DEPT_STATS.get(dept, {}).get("avg_price_per_m2")
+    if dept_avg is None or dept_avg <= 0:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Average price per m² is unavailable for department '{dept}'. "
+                   "Run data cleaning to regenerate cleaned_dataset.csv.",
+        )
+
+    afford_ratio = pred_pm2 / dept_avg
+    afford_score = min(10, max(0, (2 - afford_ratio) * 10))  # ratio 0.5->15(cap 10), 1.0->10, 2.0->0
 
     investment_score = round(yield_score * 0.4 + growth_score * 0.4 + afford_score * 0.2, 1)
     investment_score = min(10.0, max(0.0, investment_score))
