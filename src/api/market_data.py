@@ -9,6 +9,18 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
+# ---------------------------------------------------------------------------
+# Module-level globals — empty until initialize() is called.
+# Nothing runs on import.
+# ---------------------------------------------------------------------------
+DEPT_STATS: dict = {}
+COMMUNE_DATA: dict = {}
+COMMUNE_COORDS: dict = {}
+CLEANED_DF: pd.DataFrame = pd.DataFrame()
+MARKET_GROWTH: dict = {}
+
+
+
 
 def _load_dept_stats() -> dict:
     """Compute average price/m² per department from cleaned dataset."""
@@ -128,23 +140,51 @@ def _compute_market_growth() -> dict:
     return growth
 
 
-try:
-    logger.info("Loading department statistics...")
-    DEPT_STATS = _load_dept_stats()
-    logger.info("Loading commune data...")
-    COMMUNE_DATA, COMMUNE_COORDS = _load_commune_and_coords()
-    logger.info("Loading cleaned dataset...")
-    CLEANED_DF = _load_cleaned_df()
-    logger.info("Data loading complete.")
+def initialize() -> None:
+    """Load all market data into module-level globals.
 
-    logger.info("Computing market growth...")
-    MARKET_GROWTH = _compute_market_growth()
-    logger.info("Market growth computed.")
-except Exception as e:
-    logger.error("Critical error during data loading: %s", e, exc_info=True)
-    logger.info(f"WARNING: Data loading failed ({e}). The API will start with empty data.")
-    DEPT_STATS = DEPT_STATS if "DEPT_STATS" in dir() else {}
-    COMMUNE_DATA = COMMUNE_DATA if "COMMUNE_DATA" in dir() else {}
-    COMMUNE_COORDS = COMMUNE_COORDS if "COMMUNE_COORDS" in dir() else {}
-    CLEANED_DF = CLEANED_DF if "CLEANED_DF" in dir() else pd.DataFrame()
-    MARKET_GROWTH = MARKET_GROWTH if "MARKET_GROWTH" in dir() else {}
+    Must be called before any service function that reads these globals.
+    Designed to be invoked from the FastAPI lifespan hook in main.py —
+    NOT triggered automatically on import.
+    """
+    global DEPT_STATS, COMMUNE_DATA, COMMUNE_COORDS, CLEANED_DF, MARKET_GROWTH
+
+    try:
+        from huggingface_hub import download_bucket_files
+        
+        logger.info("Syncing datasets from Hugging Face Bucket...")
+        files_to_sync = [
+            ("cleaned_dataset.csv", os.path.join(DATA_DIR, "cleaned_dataset.csv"))
+        ]
+        for dept, filename in RAW_DATASETS.items():
+            files_to_sync.append((filename, os.path.join(DATA_DIR, filename)))
+            
+        # We only download missing files to speed up subsequent startups.
+        missing_files = []
+        for remote_path, local_path in files_to_sync:
+            if not os.path.exists(local_path):
+                missing_files.append((remote_path, local_path))
+                
+        if missing_files:
+            download_bucket_files(
+                "b00827-pass/mlops_course",
+                files=missing_files
+            )
+            logger.info(f"Downloaded {len(missing_files)} files from bucket.")
+        else:
+            logger.info("All data files already present locally.")
+
+        logger.info("Loading department statistics...")
+        DEPT_STATS = _load_dept_stats()
+        logger.info("Loading commune data...")
+        COMMUNE_DATA, COMMUNE_COORDS = _load_commune_and_coords()
+        logger.info("Loading cleaned dataset...")
+        CLEANED_DF = _load_cleaned_df()
+        logger.info("Data loading complete.")
+
+        logger.info("Computing market growth...")
+        MARKET_GROWTH = _compute_market_growth()
+        logger.info("Market growth computed.")
+    except Exception as e:
+        logger.error("Critical error during data loading: %s", e, exc_info=True)
+        logger.info(f"WARNING: Data loading failed ({e}). The API will start with empty data.")

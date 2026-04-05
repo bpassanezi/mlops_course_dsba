@@ -10,18 +10,75 @@ from model.train import preprocess_data
 
 logger = logging.getLogger(__name__)
 
+def _try_pull_from_bucket(artifact_dir: str) -> bool:
+    """Download the latest model version from the Hugging Face Bucket."""
+    try:
+        from huggingface_hub import download_bucket_files, list_bucket_tree
+        
+        # 1. List all files in the bucket
+        bucket_name = "b00827-pass/mlops_course"
+        all_items = list_bucket_tree(bucket_name, recursive=True)
+
+        all_files = [item.path for item in all_items]
+        
+        # Find all model and contract files
+        model_remote_files = sorted([
+            file for file in all_files
+            if "model_" in file
+        ])
+        contract_remote_files = sorted([
+            file for file in all_files
+            if "contract_" in file
+        ])
+
+        
+        if not model_remote_files or not contract_remote_files:
+            return False
+            
+        latest_model = model_remote_files[-1]
+        latest_contract = contract_remote_files[-1]
+        
+        # 2. Download the actual model files if we don't have them locally
+        files_to_sync = []
+        local_model_target = os.path.join(artifact_dir, os.path.basename(latest_model))
+        local_contract_target = os.path.join(artifact_dir, os.path.basename(latest_contract))
+        
+        if not os.path.exists(local_model_target):
+            files_to_sync.append((latest_model, local_model_target))
+        if not os.path.exists(local_contract_target):
+            files_to_sync.append((latest_contract, local_contract_target))
+
+            
+        if files_to_sync:
+            logger.info("Downloading missing model artifacts from HF Bucket...")
+            download_bucket_files(bucket_name, files=files_to_sync)
+            
+        return True
+    except Exception as e:
+        logger.warning(f"Could not pull model from Hugging Face Bucket: {e}")
+        return False
+
+
 def get_latest_artifacts_path():
     """Find the most recent model and contract files in the artifacts directory."""
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     artifact_dir = os.path.join(base_dir, "models")
     
+    os.makedirs(artifact_dir, exist_ok=True)
+    
     model_files = sorted(glob.glob(os.path.join(artifact_dir, "model_*.joblib")))
     contract_files = sorted(glob.glob(os.path.join(artifact_dir, "contract_*.json")))
     
     if not model_files or not contract_files:
+        logger.info("No local model artifacts found — attempting Hugging Face Bucket pull...")
+        if _try_pull_from_bucket(artifact_dir):
+            model_files = sorted(glob.glob(os.path.join(artifact_dir, "model_*.joblib")))
+            contract_files = sorted(glob.glob(os.path.join(artifact_dir, "contract_*.json")))
+    
+    if not model_files or not contract_files:
         raise FileNotFoundError(
             f"No model artifacts found in '{artifact_dir}'. "
-            "Run 'python -m src.model.train' to train a model first."
+            "Could not pull from bucket. Run 'python -m src.model.train' to train locally."
         )
     
     return model_files[-1], contract_files[-1]
