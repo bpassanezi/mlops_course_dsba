@@ -31,7 +31,7 @@ class TestScoringAPI:
             {
                 'surface_reelle_bati': 60, 
                 'nombre_pieces_principales': 2, 
-                'code_departement': '15', 
+                'code_departement': '69', 
                 'type_local': 'Appartement'
             }, 
             200, 
