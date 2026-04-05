@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 import logging
 from typing import Optional
-from scoring.predict import scoring_function
+from scoring import predict
 from api.constants import AVAILABLE_DEPARTMENTS, DEPT_MAIN_CITY, DEPT_CENTER, DEPT_ZOOM
 from api.schemas import (
     ScoringRequest, 
@@ -42,7 +42,7 @@ async def get_scoring(request: ScoringRequest):
         )
 
     try:
-        prediction, breakdown = scoring_function(
+        prediction, breakdown = predict(
             surface_reelle_bati=request.surface_reelle_bati,
             nombre_pieces_principales=request.nombre_pieces_principales,
             code_departement=dept,

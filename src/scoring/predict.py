@@ -132,7 +132,7 @@ def _group_contributions(base_value, feature_contribs):
     }
 
 
-def scoring_function(
+def predict(
     surface_reelle_bati: float,
     nombre_pieces_principales: float,
     code_departement: str,

@@ -208,7 +208,7 @@ st.markdown("""
     border-bottom: 1px solid #0F172A;
 ">
     <p style="margin:0; font-size:1.15em; font-family:'Merriweather', serif; font-style:italic; letter-spacing:0.01em;">
-        Know what a property is truly worth — before you make your move.
+        Know what a property is truly worth before you make your move.
     </p>
     <p style="margin:6px 0 0; font-size:0.82em; color:#94A3B8; font-family:'Inter', sans-serif; letter-spacing:0.04em; text-transform:uppercase;">
         Data-driven valuations · Real market comparisons · Investment intelligence

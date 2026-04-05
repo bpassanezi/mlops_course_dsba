@@ -1,0 +1,1 @@
+from scoring.predict import predict
