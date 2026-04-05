@@ -1,9 +1,3 @@
-"""
-geography_service.py
---------------------
-Helpers for commune names, postcodes, and coordinate lookups.
-"""
-
 from api import market_data
 
 

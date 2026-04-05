@@ -1,9 +1,3 @@
-"""
-scoring_service.py
-------------------
-Helpers related to property price scoring and department market statistics.
-"""
-
 from api import market_data
 
 

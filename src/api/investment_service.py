@@ -1,10 +1,3 @@
-"""
-investment_service.py
----------------------
-Investment metric calculations: rental yield, estimated monthly rent,
-year-over-year market growth, and the composite investment score (0–10).
-"""
-
 from api.constants import RENTAL_YIELDS
 from api import market_data
 

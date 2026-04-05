@@ -1,10 +1,3 @@
-"""
-comparables_service.py
-----------------------
-Comparable property search: finds the N most similar real transactions
-in the same department using normalised Euclidean distance on surface and rooms.
-"""
-
 from api import market_data
 
 
