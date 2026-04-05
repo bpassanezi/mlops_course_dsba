@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+import logging
 from typing import Optional
 from scoring.predict import scoring_function
 from api.constants import AVAILABLE_DEPARTMENTS, DEPT_MAIN_CITY, DEPT_CENTER, DEPT_ZOOM
@@ -29,17 +30,39 @@ RENTAL_YIELDS = {
 }
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.post("/scoring/", response_model=ScoringResponse)
 async def get_scoring(request: ScoringRequest):
-    prediction, breakdown = scoring_function(
-        surface_reelle_bati=request.surface_reelle_bati,
-        nombre_pieces_principales=request.nombre_pieces_principales,
-        code_departement=request.code_departement,
-        type_local=request.type_local
-    )
-
     dept = request.code_departement.strip()
+    if dept not in AVAILABLE_DEPARTMENTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown department '{dept}'. Available: {list(AVAILABLE_DEPARTMENTS.keys())}",
+        )
+
+    try:
+        prediction, breakdown = scoring_function(
+            surface_reelle_bati=request.surface_reelle_bati,
+            nombre_pieces_principales=request.nombre_pieces_principales,
+            code_departement=dept,
+            type_local=request.type_local
+        )
+    except FileNotFoundError as e:
+        logger.error("Model artifacts missing: %s", e)
+        raise HTTPException(
+            status_code=503,
+            detail="No trained model is available. Please train a model first.",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error("Scoring failed: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Scoring failed unexpectedly: {e}",
+        )
+
     dept_stats = DEPT_STATS.get(dept, {})
 
     return {"score": prediction, "breakdown": breakdown, "dept_stats": dept_stats}
@@ -84,10 +107,15 @@ async def get_comparables(
     n: int = 5,
 ):
     """Return the N most similar properties in the same department."""
+    dept = code_departement.strip()
+    if dept not in AVAILABLE_DEPARTMENTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown department '{dept}'. Available: {list(AVAILABLE_DEPARTMENTS.keys())}",
+        )
+
     if CLEANED_DF.empty:
         return {"comparables": []}
-
-    dept = code_departement.strip()
     sub = CLEANED_DF[CLEANED_DF["code_departement"] == dept].copy()
 
     # Filter to same property type
@@ -124,6 +152,16 @@ async def get_investment(
 ):
     """Return investment insight metrics for a given prediction."""
     dept = code_departement.strip()
+    if dept not in AVAILABLE_DEPARTMENTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown department '{dept}'. Available: {list(AVAILABLE_DEPARTMENTS.keys())}",
+        )
+    if prediction <= 0:
+        raise HTTPException(status_code=400, detail="prediction must be > 0")
+    if surface_reelle_bati <= 0:
+        raise HTTPException(status_code=400, detail="surface_reelle_bati must be > 0")
+
     rental_yield = RENTAL_YIELDS.get(dept, 4.5)
     market_growth = MARKET_GROWTH.get(dept, 0.0)
 

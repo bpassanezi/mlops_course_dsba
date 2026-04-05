@@ -263,23 +263,31 @@ with main_col1:
         with st.spinner("Compiling full market report..."):
             try:
                 # 1. Get Score & Breakdown
-                score_resp = requests.post(f"{API_URL}/scoring/", json=payload).json()
+                score_r = requests.post(f"{API_URL}/scoring/", json=payload, timeout=15)
+                if not score_r.ok:
+                    detail = score_r.json().get("detail", score_r.text) if score_r.headers.get("content-type", "").startswith("application/json") else score_r.text
+                    st.error(f"Scoring failed ({score_r.status_code}): {detail}")
+                    st.stop()
+                score_resp = score_r.json()
                 prediction = score_resp.get("score", 0)
                 
                 # 2. Get Comparables
-                comp_resp = requests.get(f"{API_URL}/comparables/", params={
+                comp_r = requests.get(f"{API_URL}/comparables/", params={
                     "code_departement": selected_dept, "surface_reelle_bati": surface,
                     "nombre_pieces_principales": rooms, "type_local": type_local, "n": 5
-                }).json()
+                }, timeout=15)
+                comp_resp = comp_r.json() if comp_r.ok else {"comparables": []}
                 
                 # 3. Get Investment data
                 inv_resp = {}
                 try:
-                    inv_resp = requests.get(f"{API_URL}/investment/", params={
+                    inv_r = requests.get(f"{API_URL}/investment/", params={
                         "code_departement": selected_dept, "prediction": prediction, "surface_reelle_bati": surface
-                    }).json()
-                except:
-                    pass # Handled gracefully later
+                    }, timeout=15)
+                    if inv_r.ok:
+                        inv_resp = inv_r.json()
+                except Exception:
+                    pass
                 
                 # Save ALL data to session state
                 st.session_state.report_data = {
@@ -290,7 +298,11 @@ with main_col1:
                     "surface": surface,
                     "dept_name": departments.get(selected_dept, selected_dept)
                 }
-                st.session_state.current_page = 1 
+                st.session_state.current_page = 1
+            except requests.ConnectionError:
+                st.error("Cannot reach the API. Make sure the backend is running.")
+            except requests.Timeout:
+                st.error("The API took too long to respond. Please try again.")
             except Exception as e:
                 st.error(f"Error compiling report: {e}")
 

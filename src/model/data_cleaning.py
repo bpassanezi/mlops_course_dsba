@@ -47,7 +47,15 @@ VALID_TYPE_LOCAL = [
 def load_dataset(filename: str) -> pd.DataFrame:
     """Load a single CSV and coerce key numeric columns."""
     filepath = os.path.join(DATA_DIR, filename)
-    df = pd.read_csv(filepath, low_memory=False)
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(
+            f"Dataset file not found: '{filepath}'. "
+            f"Ensure '{filename}' is present in the data/ directory."
+        )
+    try:
+        df = pd.read_csv(filepath, low_memory=False)
+    except Exception as e:
+        raise RuntimeError(f"Failed to read '{filepath}': {e}") from e
     numeric_cols = [
         "valeur_fonciere", "surface_reelle_bati", "nombre_pieces_principales",
         "surface_terrain", "longitude", "latitude", "adresse_numero",
@@ -66,6 +74,11 @@ def load_all_datasets() -> pd.DataFrame:
     frames = []
     for filename in DATASETS:
         frames.append(load_dataset(filename))
+    if not frames:
+        raise RuntimeError(
+            "No dataset files could be loaded. "
+            f"Check that the data/ directory ({DATA_DIR}) contains the expected CSV files."
+        )
     return pd.concat(frames, ignore_index=True)
 
 
@@ -437,9 +450,19 @@ if __name__ == "__main__":
         run_all_eda()
 
     elif mode == "clean":
-        df = load_and_clean()
+        try:
+            df = load_and_clean()
+        except (FileNotFoundError, RuntimeError) as e:
+            print(f"ERROR: {e}")
+            sys.exit(1)
+
         out_path = os.path.join(DATA_DIR, "cleaned_dataset.csv")
-        df.to_csv(out_path, index=False)
+        try:
+            df.to_csv(out_path, index=False)
+        except OSError as e:
+            print(f"ERROR: Could not write to '{out_path}': {e}")
+            sys.exit(1)
+
         print(f"Cleaned dataset: {df.shape[0]} rows, {df.shape[1]} columns")
         print(f"Columns: {list(df.columns)}")
         print(f"Saved to {out_path}")
