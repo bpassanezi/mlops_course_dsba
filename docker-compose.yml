@@ -9,6 +9,11 @@ services:
       - "8000:8000"
     volumes:
       - ./models:/app/models
+      - ./data:/app/data
+    env_file:
+      - .env
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
     # Wait for backend to be healthy would be ideal, but for now simple restart works
     restart: always
 

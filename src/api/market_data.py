@@ -9,6 +9,21 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
+class MarketDataState:
+    """Holds the globally loaded market datasets in memory for active API use."""
+    def __init__(self):
+        self.dept_stats: dict = {}
+        self.commune_data: dict = {}
+        self.commune_coords: dict = {}
+        self.cleaned_df: pd.DataFrame = pd.DataFrame()
+        self.market_growth: dict = {}
+
+# A single instance used across the FastAPI app
+market_state = MarketDataState()
+
+
+
+
 
 def _load_dept_stats() -> dict:
     """Compute average price/m² per department from cleaned dataset."""
@@ -17,11 +32,13 @@ def _load_dept_stats() -> dict:
         logger.warning("cleaned_dataset.csv not found at '%s' — department stats will be empty.", cleaned_path)
         return {}
     try:
-        df = pd.read_csv(cleaned_path, low_memory=False)
+        df = pd.read_csv(cleaned_path, low_memory=False, dtype={"code_departement": str})
     except Exception as e:
         logger.error("Failed to read cleaned_dataset.csv: %s", e)
         return {}
-    df["code_departement"] = df["code_departement"].astype(str).str.strip()
+    
+    # Strip any decimal points if pandas still cast it to float string "75.0"
+    df["code_departement"] = df["code_departement"].astype(str).str.replace(".0", "", regex=False).str.strip()
     df = df[(df["surface_reelle_bati"] > 0) & (df["valeur_fonciere"] > 0)]
     df["price_per_m2"] = df["valeur_fonciere"] / df["surface_reelle_bati"]
 
@@ -85,11 +102,11 @@ def _load_cleaned_df() -> pd.DataFrame:
         logger.warning("cleaned_dataset.csv not found — comparables will be unavailable.")
         return pd.DataFrame()
     try:
-        df = pd.read_csv(cleaned_path, low_memory=False)
+        df = pd.read_csv(cleaned_path, low_memory=False, dtype={"code_departement": str})
     except Exception as e:
         logger.error("Failed to read cleaned_dataset.csv for comparables: %s", e)
         return pd.DataFrame()
-    df["code_departement"] = df["code_departement"].astype(str).str.strip()
+    df["code_departement"] = df["code_departement"].astype(str).str.replace(".0", "", regex=False).str.strip()
     df = df[(df["surface_reelle_bati"] > 0) & (df["valeur_fonciere"] > 0)]
     df["price_per_m2"] = (df["valeur_fonciere"] / df["surface_reelle_bati"]).round(2)
     return df
@@ -112,39 +129,75 @@ def _compute_market_growth() -> dict:
         except Exception as e:
             logger.error("Failed to read '%s' for market growth: %s", filename, e)
             continue
-        df["date_mutation"] = pd.to_datetime(df["date_mutation"], errors="coerce")
+
+        df["date_mutation"] = pd.to_datetime(df["date_mutation"], format="%Y-%m-%d", errors="coerce")
+        if df["date_mutation"].isna().all():
+            logger.warning("dept %s 'date_mutation' could not be parsed as YYYY-MM-DD. Falling back to dayfirst=True inference...", dept)
+            df["date_mutation"] = pd.to_datetime(df["date_mutation"], dayfirst=True, errors="coerce")
+            
         df["valeur_fonciere"] = pd.to_numeric(df["valeur_fonciere"], errors="coerce")
         df["surface_reelle_bati"] = pd.to_numeric(df["surface_reelle_bati"], errors="coerce")
         df = df[(df["surface_reelle_bati"] > 0) & (df["valeur_fonciere"] > 0)].dropna(subset=["date_mutation"])
         df["year"] = df["date_mutation"].dt.year
         df["ppm2"] = df["valeur_fonciere"] / df["surface_reelle_bati"]
         yearly = df.groupby("year")["ppm2"].median()
+        
+        # Removed debug yearly logging
         if len(yearly) >= 2:
             last2 = yearly.iloc[-2:]
             pct = (last2.iloc[-1] - last2.iloc[-2]) / last2.iloc[-2] * 100
             growth[dept] = round(float(pct), 1)
         else:
             growth[dept] = 0.0
+            
+    logger.info("Market Growth dictionary generated: %s", growth)
     return growth
 
 
-try:
-    print("Loading department statistics...")
-    DEPT_STATS = _load_dept_stats()
-    print("Loading commune data...")
-    COMMUNE_DATA, COMMUNE_COORDS = _load_commune_and_coords()
-    print("Loading cleaned dataset...")
-    CLEANED_DF = _load_cleaned_df()
-    print("Data loading complete.")
+def initialize() -> None:
+    """Load all market data into the market_state singleton.
 
-    print("Computing market growth...")
-    MARKET_GROWTH = _compute_market_growth()
-    print("Market growth computed.")
-except Exception as e:
-    logger.error("Critical error during data loading: %s", e, exc_info=True)
-    print(f"WARNING: Data loading failed ({e}). The API will start with empty data.")
-    DEPT_STATS = DEPT_STATS if "DEPT_STATS" in dir() else {}
-    COMMUNE_DATA = COMMUNE_DATA if "COMMUNE_DATA" in dir() else {}
-    COMMUNE_COORDS = COMMUNE_COORDS if "COMMUNE_COORDS" in dir() else {}
-    CLEANED_DF = CLEANED_DF if "CLEANED_DF" in dir() else pd.DataFrame()
-    MARKET_GROWTH = MARKET_GROWTH if "MARKET_GROWTH" in dir() else {}
+    Designed to be invoked from the FastAPI lifespan hook in main.py.
+    """
+    try:
+        from huggingface_hub import download_bucket_files
+        
+        logger.info("Syncing datasets from Hugging Face Bucket...")
+
+        files_to_sync = [
+            ("data/cleaned_dataset.csv", os.path.join(DATA_DIR, "cleaned_dataset.csv"))
+        ]
+        for dept, filename in RAW_DATASETS.items():
+            files_to_sync.append((filename, os.path.join(DATA_DIR, filename)))
+            
+        # We only download missing files to speed up subsequent startups.
+        missing_files = []
+        for remote_path, local_path in files_to_sync:
+            if not os.path.exists(local_path):
+                missing_files.append((remote_path, local_path))
+                
+        if missing_files:
+            logger.info("Downloading %d files from bucket...", len(missing_files))
+            download_bucket_files(
+                "b00827-pass/mlops_course",
+                files=missing_files
+            )
+            logger.info("Downloaded %d files from bucket.", len(missing_files))
+        else:
+            logger.info("All data files already present locally.")
+
+        # Directory debug removed
+
+        logger.info("Loading department statistics...")
+        market_state.dept_stats = _load_dept_stats()
+        logger.info("Loading commune data...")
+        market_state.commune_data, market_state.commune_coords = _load_commune_and_coords()
+        logger.info("Loading cleaned dataset...")
+        market_state.cleaned_df = _load_cleaned_df()
+        logger.info("Data loading complete.")
+
+        logger.info("Computing market growth...")
+        market_state.market_growth = _compute_market_growth()
+        logger.info("Market growth computed.")
+    except Exception as e:
+        logger.info("WARNING: Data loading failed (%s). The API will start with empty data.", e)

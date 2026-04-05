@@ -9,9 +9,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code and model artifacts
 COPY src/ ./src/
-COPY models/ ./models/
-COPY data/cleaned_dataset.csv ./data/cleaned_dataset.csv
-
 
 # Set PYTHONPATH to include src
 ENV PYTHONPATH="/app/src"

@@ -38,3 +38,12 @@ RAW_DATASETS = {
     "69": "rhone_dataset.csv",
     "75": "paris_dataset.csv",
 }
+
+# Realistic gross annual rental yields per department (% of property value)
+RENTAL_YIELDS = {
+    "13": 5.3,   # Marseille
+    "31": 4.6,   # Toulouse
+    "59": 5.8,   # Lille
+    "69": 4.1,   # Lyon
+    "75": 3.2,   # Paris
+}

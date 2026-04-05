@@ -1,6 +1,9 @@
 import os
 import pandas as pd
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Data lives in the project root's data/ folder (two levels up from src/model/)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -248,86 +251,86 @@ def outlier_detection(df: pd.DataFrame, column: str) -> dict:
 def run_eda(filename: str) -> None:
     """Run full EDA for a single dataset and print results."""
     name = filename.replace("_dataset.csv", "").replace("_", " ").title()
-    print("=" * 80)
-    print(f"  EDA - {name}")
-    print("=" * 80)
+    logger.info("=" * 80)
+    logger.info(f"  EDA - {name}")
+    logger.info("=" * 80)
 
     df = load_dataset(filename)
 
     # 1. Basic info
     info = basic_info(df, name)
-    print("\n--- Basic Information ---")
+    logger.info("\n--- Basic Information ---")
     for k, v in info.items():
-        print(f"  {k}: {v}")
+        logger.info(f"  {k}: {v}")
 
     # 2. Missing values
-    print("\n--- Missing Values (columns with missing data) ---")
+    logger.info("\n--- Missing Values (columns with missing data) ---")
     mv = missing_values_summary(df)
     if mv.empty:
-        print("  No missing values.")
+        logger.info("  No missing values.")
     else:
-        print(mv.to_string())
+        logger.info(mv.to_string())
 
     # 3. Numeric summary
-    print("\n--- Numeric Columns Summary ---")
-    print(numeric_summary(df).to_string())
+    logger.info("\n--- Numeric Columns Summary ---")
+    logger.info(numeric_summary(df).to_string())
 
     # 4. Categorical summary
-    print("\n--- Categorical Columns Summary ---")
+    logger.info("\n--- Categorical Columns Summary ---")
     cs = categorical_summary(df)
     if not cs.empty:
-        print(cs.to_string(index=False))
+        logger.info(cs.to_string(index=False))
 
     # 5. Target variable (valeur_fonciere)
-    print("\n--- Target Variable: valeur_fonciere (Property Value) ---")
+    logger.info("\n--- Target Variable: valeur_fonciere (Property Value) ---")
     tva = target_variable_analysis(df)
     for k, v in tva.items():
-        print(f"  {k}: {v}")
+        logger.info(f"  {k}: {v}")
 
     # 6. Mutation type distribution
-    print("\n--- Transaction Type Distribution ---")
+    logger.info("\n--- Transaction Type Distribution ---")
     mtd = mutation_type_distribution(df)
     if not mtd.empty:
-        print(mtd.to_string())
+        logger.info(mtd.to_string())
 
     # 7. Property type distribution
-    print("\n--- Property Type Distribution ---")
+    logger.info("\n--- Property Type Distribution ---")
     ptd = property_type_distribution(df)
     if not ptd.empty:
-        print(ptd.to_string())
+        logger.info(ptd.to_string())
 
     # 8. Top communes
-    print("\n--- Top 10 Communes by Transactions ---")
+    logger.info("\n--- Top 10 Communes by Transactions ---")
     tc = top_communes(df, 10)
     if not tc.empty:
-        print(tc.to_string())
+        logger.info(tc.to_string())
 
     # 9. Price by property type
-    print("\n--- Mean/Median Price by Property Type ---")
+    logger.info("\n--- Mean/Median Price by Property Type ---")
     pbp = price_by_property_type(df)
     if not pbp.empty:
-        print(pbp.to_string())
+        logger.info(pbp.to_string())
 
     # 10. Surface analysis
-    print("\n--- Surface Reelle Bati (Built Area) Analysis ---")
+    logger.info("\n--- Surface Reelle Bati (Built Area) Analysis ---")
     sa = surface_analysis(df)
     for k, v in sa.items():
-        print(f"  {k}: {v}")
+        logger.info(f"  {k}: {v}")
 
     # 11. Correlation matrix
-    print("\n--- Correlation Matrix (Key Features) ---")
+    logger.info("\n--- Correlation Matrix (Key Features) ---")
     corr = correlation_analysis(df)
     if not corr.empty:
-        print(corr.to_string())
+        logger.info(corr.to_string())
 
     # 12. Outlier detection
     for col in ["valeur_fonciere", "surface_reelle_bati"]:
-        print(f"\n--- Outlier Detection: {col} (IQR method) ---")
+        logger.info(f"\n--- Outlier Detection: {col} (IQR method) ---")
         od = outlier_detection(df, col)
         for k, v in od.items():
-            print(f"  {k}: {v}")
+            logger.info(f"  {k}: {v}")
 
-    print("\n")
+    logger.info("\n")
 
 
 def run_all_eda() -> None:
@@ -453,19 +456,19 @@ if __name__ == "__main__":
         try:
             df = load_and_clean()
         except (FileNotFoundError, RuntimeError) as e:
-            print(f"ERROR: {e}")
+            logger.info(f"ERROR: {e}")
             sys.exit(1)
 
         out_path = os.path.join(DATA_DIR, "cleaned_dataset.csv")
         try:
             df.to_csv(out_path, index=False)
         except OSError as e:
-            print(f"ERROR: Could not write to '{out_path}': {e}")
+            logger.info(f"ERROR: Could not write to '{out_path}': {e}")
             sys.exit(1)
 
-        print(f"Cleaned dataset: {df.shape[0]} rows, {df.shape[1]} columns")
-        print(f"Columns: {list(df.columns)}")
-        print(f"Saved to {out_path}")
+        logger.info(f"Cleaned dataset: {df.shape[0]} rows, {df.shape[1]} columns")
+        logger.info(f"Columns: {list(df.columns)}")
+        logger.info(f"Saved to {out_path}")
 
     else:
-        print(usage)
+        logger.info(usage)
